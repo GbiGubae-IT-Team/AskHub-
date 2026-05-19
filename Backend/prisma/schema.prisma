@@ -1,0 +1,165 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+enum QuestionStatus {
+  PENDING      
+  APPROVED     // visible to teachers/public
+  REJECTED
+  ANSWERED
+}
+
+enum RoomType {
+  FREE_CHAT
+  SERMON
+}
+
+enum MessageType {
+  QUESTION
+  ANSWER
+  COMMENT
+}
+
+
+model User {
+  id            String   @id @default(uuid())
+  anonymousId   String   @unique // public-facing random ID
+  role          UserRole @default(STUDENT)
+  email         String?  @unique
+  password      String?
+
+  createdAt     DateTime @default(now())
+
+  // Relations
+  questions     Question[]
+  answers       Answer[]
+  messages      Message[]
+  votes         Vote[]
+  notifications Notification[]
+  roomsCreated  Room[]   @relation("RoomCreator")
+}
+
+model Question {
+  id          String          @id @default(uuid())
+  content     String
+  isAnonymous Boolean         @default(true)
+
+  status      QuestionStatus  @default(PENDING)
+
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  // Relations
+  authorId    String
+  author      User            @relation(fields: [authorId], references: [id])
+
+  answers     Answer[]
+  tags        QuestionTag[]
+
+  roomId      String?         // if asked inside a room
+  room        Room?           @relation(fields: [roomId], references: [id])
+}
+
+model Answer {
+  id          String   @id @default(uuid())
+  content     String
+
+  createdAt   DateTime @default(now())
+
+  // Relations
+  questionId  String
+  question    Question @relation(fields: [questionId], references: [id])
+
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id])
+}
+
+model Room {
+  id          String    @id @default(uuid())
+  name        String
+  type        RoomType
+
+  isActive    Boolean   @default(true)
+
+  createdAt   DateTime  @default(now())
+
+  // Relations
+  createdById String
+  createdBy   User      @relation("RoomCreator", fields: [createdById], references: [id])
+
+  messages    Message[]
+  questions   Question[]
+}
+
+model Message {
+  id          String      @id @default(uuid())
+  content     String
+  type        MessageType
+
+  createdAt   DateTime    @default(now())
+
+  // Relations
+  senderId    String
+  sender      User        @relation(fields: [senderId], references: [id])
+
+  roomId      String
+  room        Room        @relation(fields: [roomId], references: [id])
+}
+
+model Tag {
+  id        String        @id @default(uuid())
+  name      String        @unique
+
+  questions QuestionTag[]
+}
+
+model QuestionTag {
+  questionId String
+  tagId      String
+
+  question   Question @relation(fields: [questionId], references: [id])
+  tag        Tag      @relation(fields: [tagId], references: [id])
+
+  @@id([questionId, tagId])
+}
+
+model Vote {
+  id          String   @id @default(uuid())
+  value       Int      // +1 or -1
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+
+  questionId  String?
+  answerId    String?
+
+  @@unique([userId, questionId])
+  @@unique([userId, answerId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  content   String
+  isRead    Boolean  @default(false)
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+}
