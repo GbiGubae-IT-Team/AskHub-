@@ -5,7 +5,7 @@ export const updateUserSchema = Joi.object({
   email: Joi.string().email().optional(),
   password: Joi.string().min(6).optional(),
   role: Joi.string()
-    .valid(...Object.values(UserRole))
+    .valid(UserRole.STUDENT, UserRole.TEACHER, UserRole.ADMIN)
     .optional(),
 })
   .min(1)

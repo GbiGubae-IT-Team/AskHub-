@@ -6,6 +6,7 @@ import {
   requirePermission,
 } from "../../auth/index.js";
 import {
+  createAdminController,
   createUserController,
   deleteUserController,
   getUserByIdController,
@@ -27,6 +28,13 @@ router.post(
   authenticate,
   requirePermission("user:manage"),
   asyncHandler(createUserController),
+);
+
+router.post(
+  "/admins",
+  authenticate,
+  requirePermission("admin:create"),
+  asyncHandler(createAdminController),
 );
 
 router.get("/:id", optionalAuthenticate, asyncHandler(getUserByIdController));

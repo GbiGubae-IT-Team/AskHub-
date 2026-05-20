@@ -1,10 +1,15 @@
 import { randomUUID } from "node:crypto";
 import { UserRole } from "../../../generated/prisma/client.js";
 import { hasPermission } from "../../../core/constants/permissions.js";
+import {
+  assertCanAssignRole,
+  isPrivilegedRole,
+} from "../../../core/constants/roleHierarchy.js";
 import { BadRequestError } from "../../../core/errors/BadRequestError.js";
 import { ForbiddenError } from "../../../core/errors/ForbiddenError.js";
 import { NotFoundError } from "../../../core/errors/NotFoundError.js";
 import { passwordService } from "../../../core/utils/hashPassword.js";
+import { mapPrismaError } from "../../../core/utils/prismaErrors.js";
 import type { JwtPayload } from "../../../shared/types/types.js";
 import { userRepository } from "../repositories/_.repository.js";
 import {
@@ -17,12 +22,23 @@ import {
 } from "../types/user.types.js";
 import { userValidationService } from "./_Validation.service.js";
 
-const isAdmin = (role: UserRole) => role === UserRole.ADMIN;
 const canManageUsers = (role: UserRole) => hasPermission(role, "user:manage");
 
 const assertManageAccess = (actor: JwtPayload) => {
   if (!canManageUsers(actor.role)) {
     throw new ForbiddenError("You do not have permission to manage users");
+  }
+};
+
+const assertCanModifyUser = (
+  targetRole: UserRole,
+  actor: JwtPayload,
+) => {
+  if (
+    targetRole === UserRole.SUPER_ADMIN &&
+    actor.role !== UserRole.SUPER_ADMIN
+  ) {
+    throw new ForbiddenError("Only the super admin can modify this account");
   }
 };
 
@@ -38,11 +54,40 @@ export const createUserService = async (
     throw new BadRequestError("Email is already registered");
   }
 
+  const role = dto.role ?? UserRole.STUDENT;
+  assertCanAssignRole(actor.role, role);
+
   const user = await userRepository.create({
     email: dto.email,
     password: await passwordService.hashPassword(dto.password),
     anonymousId: `anon_${randomUUID()}`,
-    role: dto.role ?? UserRole.STUDENT,
+    role,
+  });
+
+  return toPrivateUser(user);
+};
+
+export const createAdminService = async (
+  body: unknown,
+  actor: JwtPayload,
+): Promise<UserResponse> => {
+  if (!hasPermission(actor.role, "admin:create")) {
+    throw new ForbiddenError("Only the super admin can create admin accounts");
+  }
+
+  const dto = userValidationService.validateCreate(body);
+
+  if (await userRepository.findByEmail(dto.email)) {
+    throw new BadRequestError("Email is already registered");
+  }
+
+  assertCanAssignRole(actor.role, UserRole.ADMIN);
+
+  const user = await userRepository.create({
+    email: dto.email,
+    password: await passwordService.hashPassword(dto.password),
+    anonymousId: `anon_${randomUUID()}`,
+    role: UserRole.ADMIN,
   });
 
   return toPrivateUser(user);
@@ -54,13 +99,15 @@ export const listUsersService = async (
 ): Promise<PaginatedUsersResponse> => {
   assertManageAccess(actor);
 
-  const { page, limit, role } = userValidationService.validateListQuery(query);
+  const { page, limit, role, includeInactive } =
+    userValidationService.validateListQuery(query);
   const skip = (page - 1) * limit;
 
   const { items, total } = await userRepository.findMany({
     skip,
     take: limit,
     ...(role !== undefined && { role }),
+    includeInactive: includeInactive ?? false,
   });
 
   return {
@@ -84,7 +131,9 @@ export const getUserByIdService = async (
 
   const canViewPrivate =
     actor &&
-    (actor.userId === id || isAdmin(actor.role) || canManageUsers(actor.role));
+    (actor.userId === id ||
+      isPrivilegedRole(actor.role) ||
+      canManageUsers(actor.role));
 
   return canViewPrivate ? toPrivateUser(user) : toPublicUser(user);
 };
@@ -100,16 +149,22 @@ export const updateUserService = async (
     throw new NotFoundError("User not found");
   }
 
+  assertCanModifyUser(existing.role, actor);
+
   const dto = userValidationService.validateUpdate(body);
   const isSelf = actor.userId === id;
-  const actorIsAdmin = isAdmin(actor.role);
+  const actorIsPrivileged = isPrivilegedRole(actor.role);
 
-  if (!isSelf && !actorIsAdmin) {
+  if (!isSelf && !actorIsPrivileged) {
     throw new ForbiddenError("You can only update your own profile");
   }
 
-  if (dto.role !== undefined && !actorIsAdmin) {
+  if (dto.role !== undefined && !actorIsPrivileged) {
     throw new ForbiddenError("Only admins can change user roles");
+  }
+
+  if (dto.role !== undefined) {
+    assertCanAssignRole(actor.role, dto.role);
   }
 
   if (dto.email && dto.email !== existing.email) {
@@ -123,7 +178,7 @@ export const updateUserService = async (
     ...(dto.password !== undefined && {
       password: await passwordService.hashPassword(dto.password),
     }),
-    ...(dto.role !== undefined && actorIsAdmin && { role: dto.role }),
+    ...(dto.role !== undefined && actorIsPrivileged && { role: dto.role }),
   });
 
   return toPrivateUser(user);
@@ -145,5 +200,17 @@ export const deleteUserService = async (
     throw new NotFoundError("User not found");
   }
 
-  await userRepository.delete(id);
+  if (existing.role === UserRole.SUPER_ADMIN) {
+    throw new ForbiddenError("Super admin accounts cannot be deleted");
+  }
+
+  if (!existing.isActive) {
+    throw new BadRequestError("User is already deactivated");
+  }
+
+  try {
+    await userRepository.softDelete(id);
+  } catch (error) {
+    mapPrismaError(error);
+  }
 };

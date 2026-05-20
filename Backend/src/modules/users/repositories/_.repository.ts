@@ -6,21 +6,31 @@ const userSelect = {
   anonymousId: true,
   role: true,
   email: true,
+  isActive: true,
+  deletedAt: true,
   createdAt: true,
 } satisfies Prisma.UserSelect;
 
+const activeOnly = { isActive: true } as const;
+
 export const userRepository = {
-  async findById(id: string) {
-    return prisma.user.findUnique({
-      where: { id },
+  async findById(id: string, includeInactive = false) {
+    return prisma.user.findFirst({
+      where: {
+        id,
+        ...(includeInactive ? {} : activeOnly),
+      },
       select: userSelect,
     });
   },
 
-  async findByEmail(email: string) {
-    return prisma.user.findUnique({
-      where: { email },
-      select: { id: true },
+  async findByEmail(email: string, includeInactive = false) {
+    return prisma.user.findFirst({
+      where: {
+        email,
+        ...(includeInactive ? {} : activeOnly),
+      },
+      select: { id: true, isActive: true },
     });
   },
 
@@ -28,10 +38,12 @@ export const userRepository = {
     skip: number;
     take: number;
     role?: UserRole;
+    includeInactive?: boolean;
   }) {
-    const where: Prisma.UserWhereInput = params.role
-      ? { role: params.role }
-      : {};
+    const where: Prisma.UserWhereInput = {
+      ...(params.role !== undefined && { role: params.role }),
+      ...(params.includeInactive ? {} : activeOnly),
+    };
 
     const [items, total] = await Promise.all([
       prisma.user.findMany({
@@ -62,10 +74,16 @@ export const userRepository = {
     });
   },
 
-  async delete(id: string) {
-    return prisma.user.delete({
+  async softDelete(id: string) {
+    return prisma.user.update({
       where: { id },
-      select: { id: true },
+      data: {
+        isActive: false,
+        deletedAt: new Date(),
+        email: null,
+        password: null,
+      },
+      select: userSelect,
     });
   },
 };

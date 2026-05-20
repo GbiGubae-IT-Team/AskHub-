@@ -35,6 +35,24 @@ export const ROLE_PERMISSIONS = {
     "notification:read",
     "notification:delete",
   ],
+  [UserRole.SUPER_ADMIN]: [
+    "question:create",
+    "question:read",
+    "question:approve",
+    "question:delete",
+    "answer:create",
+    "answer:delete",
+    "vote:create",
+    "message:create",
+    "message:delete",
+    "room:create",
+    "room:delete",
+    "user:manage",
+    "admin:create",
+    "tag:manage",
+    "notification:read",
+    "notification:delete",
+  ],
 } as const;
 
 export type Permission =

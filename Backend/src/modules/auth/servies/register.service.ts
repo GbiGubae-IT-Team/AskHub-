@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { UserRole } from "../../../generated/prisma/client.js";
+import { assertCanAssignRole } from "../../../core/constants/roleHierarchy.js";
 import { BadRequestError } from "../../../core/errors/BadRequestError.js";
 import { ForbiddenError } from "../../../core/errors/ForbiddenError.js";
 import { passwordService } from "../../../core/utils/hashPassword.js";
@@ -13,15 +14,19 @@ const resolveRegistrationRole = (
   requestedRole: UserRole | undefined,
   actorRole?: UserRole,
 ): UserRole => {
-  if (!requestedRole || requestedRole === UserRole.STUDENT) {
-    return UserRole.STUDENT;
+  const role = requestedRole ?? UserRole.STUDENT;
+
+  if (!actorRole) {
+    if (role !== UserRole.STUDENT) {
+      throw new ForbiddenError(
+        "Public registration is limited to student accounts",
+      );
+    }
+    return role;
   }
 
-  if (actorRole === UserRole.ADMIN) {
-    return requestedRole;
-  }
-
-  throw new ForbiddenError("Only admins can assign elevated roles");
+  assertCanAssignRole(actorRole, role);
+  return role;
 };
 
 export const registerService = async (

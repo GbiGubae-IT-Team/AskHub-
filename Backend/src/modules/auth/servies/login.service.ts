@@ -10,7 +10,7 @@ export const loginService = async (body: unknown): Promise<AuthTokensResponse> =
 
   const user = await authRepository.findUserByEmail(dto.email);
 
-  if (!user?.password) {
+  if (!user?.password || !user.isActive) {
     throw new UnauthorizedError("Invalid email or password");
   }
 

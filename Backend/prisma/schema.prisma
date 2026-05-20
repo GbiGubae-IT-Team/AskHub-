@@ -16,6 +16,7 @@ enum UserRole {
   STUDENT
   TEACHER
   ADMIN
+  SUPER_ADMIN
 }
 
 enum QuestionStatus {
@@ -38,13 +39,15 @@ enum MessageType {
 
 
 model User {
-  id            String   @id @default(uuid())
-  anonymousId   String   @unique // public-facing random ID
-  role          UserRole @default(STUDENT)
-  email         String?  @unique
+  id            String    @id @default(uuid())
+  anonymousId   String    @unique // public-facing random ID
+  role          UserRole  @default(STUDENT)
+  email         String?   @unique
   password      String?
+  isActive      Boolean   @default(true)
+  deletedAt     DateTime?
 
-  createdAt     DateTime @default(now())
+  createdAt     DateTime  @default(now())
 
   // Relations
   questions     Question[]

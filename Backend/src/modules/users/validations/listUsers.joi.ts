@@ -7,4 +7,5 @@ export const listUsersSchema = Joi.object({
   role: Joi.string()
     .valid(...Object.values(UserRole))
     .optional(),
+  includeInactive: Joi.boolean().default(false),
 });

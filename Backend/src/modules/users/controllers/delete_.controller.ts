@@ -10,6 +10,6 @@ export const deleteUserController = async (
 
   return res.status(200).json({
     success: true,
-    message: "User deleted successfully",
+    message: "User deactivated successfully",
   });
 };

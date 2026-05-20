@@ -9,4 +9,8 @@ export const env = {
   jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || "",
   databaseUrl: process.env.DATABASE_URL || "",
   nodeEnv: process.env.NODE_ENV || "development",
+  superAdmin: {
+    email: process.env.SUPER_ADMIN_EMAIL || "",
+    password: process.env.SUPER_ADMIN_PASSWORD || "",
+  },
 };

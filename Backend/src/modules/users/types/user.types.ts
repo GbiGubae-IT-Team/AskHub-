@@ -5,6 +5,8 @@ export type UserRecord = {
   anonymousId: string;
   role: UserRole;
   email: string | null;
+  isActive: boolean;
+  deletedAt: Date | null;
   createdAt: Date;
 };
 
@@ -17,12 +19,15 @@ export interface UserPublicResponse {
 
 export interface UserResponse extends UserPublicResponse {
   email: string | null;
+  isActive: boolean;
+  deletedAt: Date | null;
 }
 
 export interface ListUsersQuery {
   page: number;
   limit: number;
   role?: UserRole;
+  includeInactive?: boolean;
 }
 
 export interface PaginatedUsersResponse {
@@ -43,4 +48,6 @@ export const toPublicUser = (user: UserRecord): UserPublicResponse => ({
 export const toPrivateUser = (user: UserRecord): UserResponse => ({
   ...toPublicUser(user),
   email: user.email,
+  isActive: user.isActive,
+  deletedAt: user.deletedAt,
 });

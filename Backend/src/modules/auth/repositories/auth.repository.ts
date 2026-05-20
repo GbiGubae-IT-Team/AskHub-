@@ -3,14 +3,14 @@ import prisma from "../../../config/db.js";
 
 export const authRepository = {
   async findUserByEmail(email: string) {
-    return prisma.user.findUnique({
-      where: { email },
+    return prisma.user.findFirst({
+      where: { email, isActive: true },
     });
   },
 
   async findUserById(id: string) {
-    return prisma.user.findUnique({
-      where: { id },
+    return prisma.user.findFirst({
+      where: { id, isActive: true },
     });
   },
 
