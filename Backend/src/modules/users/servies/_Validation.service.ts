@@ -1,7 +1,7 @@
 import { BadRequestError } from "../../../core/errors/BadRequestError.js";
 import type { CreateUserDto } from "../dto/createUser.dto.js";
 import type { UpdateUserDto } from "../dto/updateUser.dto.js";
-import type { ListUsersQuery } from "../types/_.types.js";
+import type { ListUsersQuery } from "../types/user.types.js";
 import {
   createUserSchema,
   listUsersSchema,

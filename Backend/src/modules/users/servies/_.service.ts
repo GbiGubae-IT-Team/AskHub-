@@ -14,7 +14,7 @@ import {
   type PaginatedUsersResponse,
   type UserPublicResponse,
   type UserResponse,
-} from "../types/_.types.js";
+} from "../types/user.types.js";
 import { userValidationService } from "./_Validation.service.js";
 
 const isAdmin = (role: UserRole) => role === UserRole.ADMIN;
