@@ -14,11 +14,9 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  console.log("🌱 Seeding database...");
+  console.log(" Seeding database...");
 
-  //////////////////////
   // USERS
-  //////////////////////
   const student1 = await prisma.user.create({
     data: {
       anonymousId: "anon_student_1",
@@ -47,9 +45,7 @@ async function main() {
     },
   });
 
-  //////////////////////
   // TAGS
-  //////////////////////
   const faithTag = await prisma.tag.create({
     data: { name: "Faith" },
   });
@@ -62,9 +58,7 @@ async function main() {
     data: { name: "Prayer" },
   });
 
-  //////////////////////
   // ROOMS
-  //////////////////////
   const freeRoom = await prisma.room.create({
     data: {
       name: "General Discussion",
@@ -81,9 +75,7 @@ async function main() {
     },
   });
 
-  //////////////////////
   // QUESTIONS
-  //////////////////////
   const question1 = await prisma.question.create({
     data: {
       content: "Is doubt a sin?",
@@ -107,9 +99,7 @@ async function main() {
     },
   });
 
-  //////////////////////
   // ANSWERS
-  //////////////////////
   const answer1 = await prisma.answer.create({
     data: {
       content: "Doubt can be part of a growing faith...",
@@ -126,9 +116,7 @@ async function main() {
     },
   });
 
-  //////////////////////
   // MESSAGES (ROOM CHAT)
-  //////////////////////
   await prisma.message.createMany({
     data: [
       {
@@ -152,9 +140,7 @@ async function main() {
     ],
   });
 
-  //////////////////////
   // VOTES
-  //////////////////////
   await prisma.vote.createMany({
     data: [
       {
@@ -170,9 +156,7 @@ async function main() {
     ],
   });
 
-  //////////////////////
   // NOTIFICATIONS
-  //////////////////////
   await prisma.notification.createMany({
     data: [
       {

@@ -1,9 +1,11 @@
 import { Router } from "express";
-//import { vendorRoutes } from "../modules/vendors/index.js";
+import { authRoutes } from "../modules/auth/index.js";
+import { userRoutes } from "../modules/users/index.js";
 
 const router = Router();
 
-//router.use("/vendors", vendorRoutes);
+router.use("/auth", authRoutes);
+router.use("/users", userRoutes);
 
 router.get("/health", (req, res) => {
   res.status(200).json({
