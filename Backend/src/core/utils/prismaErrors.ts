@@ -5,9 +5,18 @@ export const mapPrismaError = (error: unknown): never => {
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     if (error.code === "P2003") {
       const model = error.meta?.modelName as string | undefined;
+      const messages: Record<string, string> = {
+        Room:
+          "Cannot remove this room because it still has linked messages or questions.",
+        Question:
+          "Cannot remove this question because it still has linked answers, votes, or tags.",
+        User:
+          "Cannot remove this user because they still have linked questions, answers, messages, votes, notifications, or rooms.",
+      };
+
       const message =
-        model === "Room"
-          ? "Cannot remove this room because it still has linked messages or questions."
+        model && messages[model]
+          ? messages[model]
           : "Cannot remove this record because it is still referenced by other data.";
 
       throw new BadRequestError(message);
