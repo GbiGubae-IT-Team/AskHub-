@@ -6,6 +6,7 @@ const notificationSelect = {
   content: true,
   isRead: true,
   userId: true,
+  createdById: true,
   createdAt: true,
 } satisfies Prisma.NotificationSelect;
 
@@ -18,38 +19,42 @@ export const notificationRepository = {
   },
 
   async findMany(params: {
-    userId: string;
+    where: Prisma.NotificationWhereInput;
+    unreadWhere: Prisma.NotificationWhereInput;
     skip: number;
     take: number;
-    isRead?: boolean;
   }) {
-    const where: Prisma.NotificationWhereInput = {
-      userId: params.userId,
-      ...(params.isRead !== undefined && { isRead: params.isRead }),
-    };
+    const { where, unreadWhere, skip, take } = params;
 
     const [items, total, unreadCount] = await Promise.all([
       prisma.notification.findMany({
         where,
         select: notificationSelect,
-        skip: params.skip,
-        take: params.take,
+        skip,
+        take,
         orderBy: { createdAt: "desc" },
       }),
       prisma.notification.count({ where }),
       prisma.notification.count({
-        where: { userId: params.userId, isRead: false },
+        where: { ...unreadWhere, isRead: false },
       }),
     ]);
 
     return { items, total, unreadCount };
   },
 
-  async create(data: { content: string; userId: string }) {
+  async create(data: {
+    content: string;
+    userId: string;
+    createdById?: string;
+  }) {
     return prisma.notification.create({
       data: {
         content: data.content,
         user: { connect: { id: data.userId } },
+        ...(data.createdById && {
+          createdBy: { connect: { id: data.createdById } },
+        }),
       },
       select: notificationSelect,
     });

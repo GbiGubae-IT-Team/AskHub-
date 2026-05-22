@@ -54,8 +54,9 @@ model User {
   answers       Answer[]
   messages      Message[]
   votes         Vote[]
-  notifications Notification[]
-  roomsCreated  Room[]   @relation("RoomCreator")
+  notifications         Notification[] @relation("NotificationRecipient")
+  notificationsCreated  Notification[] @relation("NotificationCreator")
+  roomsCreated          Room[]         @relation("RoomCreator")
 }
 
 model Question {
@@ -162,7 +163,10 @@ model Notification {
   isRead    Boolean  @default(false)
 
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation("NotificationRecipient", fields: [userId], references: [id])
+
+  createdById String?
+  createdBy   User?    @relation("NotificationCreator", fields: [createdById], references: [id])
 
   createdAt DateTime @default(now())
 }

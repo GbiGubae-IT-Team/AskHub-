@@ -1,5 +1,4 @@
 import { hasPermission } from "../../../core/constants/permissions.js";
-import { isPrivilegedRole } from "../../../core/constants/roleHierarchy.js";
 import { BadRequestError } from "../../../core/errors/BadRequestError.js";
 import { ForbiddenError } from "../../../core/errors/ForbiddenError.js";
 import { NotFoundError } from "../../../core/errors/NotFoundError.js";
@@ -9,6 +8,7 @@ import { notificationRepository } from "../repositories/notification.repository.
 import {
   toNotificationResponse,
   type ListNotificationsQuery,
+  type NotificationListScope,
   type PaginatedNotificationsResponse,
   type NotificationResponse,
 } from "../types/notification.types.js";
@@ -23,13 +23,49 @@ const canCreate = (role: JwtPayload["role"]) =>
 const canDelete = (role: JwtPayload["role"]) =>
   hasPermission(role, "notification:delete");
 
-const assertOwnNotification = (
-  notification: { userId: string },
+const canAccessNotification = (
+  notification: { userId: string; createdById: string | null },
   actor: JwtPayload,
 ) => {
-  if (notification.userId !== actor.userId && !canDelete(actor.role)) {
-    throw new ForbiddenError("You can only access your own notifications");
+  if (notification.userId === actor.userId) {
+    return true;
   }
+
+  if (
+    canCreate(actor.role) &&
+    notification.createdById === actor.userId
+  ) {
+    return true;
+  }
+
+  if (canDelete(actor.role)) {
+    return true;
+  }
+
+  return false;
+};
+
+const buildListFilters = (
+  actor: JwtPayload,
+  scope: NotificationListScope,
+) => {
+  if (scope === "sent") {
+    if (!canCreate(actor.role)) {
+      throw new ForbiddenError(
+        "Only admins can view notifications they created",
+      );
+    }
+
+    return {
+      where: { createdById: actor.userId },
+      unreadWhere: { createdById: actor.userId },
+    };
+  }
+
+  return {
+    where: { userId: actor.userId },
+    unreadWhere: { userId: actor.userId },
+  };
 };
 
 export const createNotificationService = async (
@@ -52,6 +88,7 @@ export const createNotificationService = async (
   const notification = await notificationRepository.create({
     content: dto.content,
     userId: dto.userId,
+    createdById: actor.userId,
   });
 
   return toNotificationResponse(notification);
@@ -67,15 +104,23 @@ export const listNotificationsService = async (
     );
   }
 
-  const { page, limit, isRead } =
+  const { page, limit, isRead, scope } =
     notificationValidationService.validateListQuery(query);
   const skip = (page - 1) * limit;
 
+  const { where, unreadWhere } = buildListFilters(
+    actor,
+    scope ?? "received",
+  );
+
   const { items, total, unreadCount } = await notificationRepository.findMany({
-    userId: actor.userId,
+    where: {
+      ...where,
+      ...(isRead !== undefined && { isRead }),
+    },
+    unreadWhere,
     skip,
     take: limit,
-    ...(isRead !== undefined && { isRead }),
   });
 
   return {
@@ -104,7 +149,9 @@ export const getNotificationByIdService = async (
     throw new NotFoundError("Notification not found");
   }
 
-  assertOwnNotification(notification, actor);
+  if (!canAccessNotification(notification, actor)) {
+    throw new NotFoundError("Notification not found");
+  }
 
   return toNotificationResponse(notification);
 };
@@ -126,22 +173,24 @@ export const updateNotificationService = async (
     throw new NotFoundError("Notification not found");
   }
 
+  if (!canAccessNotification(existing, actor)) {
+    throw new NotFoundError("Notification not found");
+  }
+
   const dto = notificationValidationService.validateUpdate(body);
   const actorCanManage = canCreate(actor.role);
-  const isOwner = existing.userId === actor.userId;
+  const isRecipient = existing.userId === actor.userId;
+  const isCreator =
+    existing.createdById === actor.userId && actorCanManage;
 
   if (dto.content !== undefined && !actorCanManage) {
     throw new ForbiddenError("Only admins can edit notification content");
   }
 
-  if (dto.isRead !== undefined && !isOwner && !actorCanManage) {
+  if (dto.isRead !== undefined && !isRecipient && !isCreator) {
     throw new ForbiddenError(
       "You can only update read status on your own notifications",
     );
-  }
-
-  if (!isOwner && !actorCanManage) {
-    throw new ForbiddenError("You can only access your own notifications");
   }
 
   const notification = await notificationRepository.update(id, {
@@ -176,9 +225,11 @@ export const deleteNotificationService = async (
     throw new NotFoundError("Notification not found");
   }
 
-  const isOwner = existing.userId === actor.userId;
+  const isRecipient = existing.userId === actor.userId;
+  const isCreator =
+    existing.createdById === actor.userId && canCreate(actor.role);
 
-  if (!isOwner && !canDelete(actor.role)) {
+  if (!isRecipient && !isCreator && !canDelete(actor.role)) {
     throw new ForbiddenError(
       "You do not have permission to delete this notification",
     );
