@@ -33,6 +33,7 @@ export const ROLE_PERMISSIONS = {
     "user:manage",
     "tag:manage",
     "notification:read",
+    "notification:create",
     "notification:delete",
   ],
   [UserRole.SUPER_ADMIN]: [
@@ -51,6 +52,7 @@ export const ROLE_PERMISSIONS = {
     "admin:create",
     "tag:manage",
     "notification:read",
+    "notification:create",
     "notification:delete",
   ],
 } as const;

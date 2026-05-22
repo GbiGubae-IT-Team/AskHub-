@@ -1,12 +1,12 @@
 import type { Response } from "express";
 import type { AuthenticatedRequest } from "../../auth/types/auth.types.js";
-import { listNotificationsService } from "../servies/notification.service.js";
+import { markAllNotificationsReadService } from "../servies/notification.service.js";
 
-export const listNotificationsController = async (
+export const markAllReadController = async (
   req: AuthenticatedRequest,
   res: Response,
 ) => {
-  const data = await listNotificationsService(req.query, req.user!);
+  const data = await markAllNotificationsReadService(req.user!);
 
   return res.status(200).json({ success: true, data });
 };
