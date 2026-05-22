@@ -1,6 +1,5 @@
 import Joi from "joi";
 
-/** Accepts UUID strings or { id: uuid } objects (matches API response shape). */
 export const tagsInputSchema = Joi.array()
   .items(
     Joi.alternatives().try(
