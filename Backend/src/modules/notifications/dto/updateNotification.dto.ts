@@ -1,3 +1,4 @@
 export interface UpdateNotificationDto {
-  isRead: boolean;
+  content?: string;
+  isRead?: boolean;
 }

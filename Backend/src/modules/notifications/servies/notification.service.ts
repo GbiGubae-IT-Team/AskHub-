@@ -126,12 +126,27 @@ export const updateNotificationService = async (
     throw new NotFoundError("Notification not found");
   }
 
-  assertOwnNotification(existing, actor);
-
   const dto = notificationValidationService.validateUpdate(body);
+  const actorCanManage = canCreate(actor.role);
+  const isOwner = existing.userId === actor.userId;
+
+  if (dto.content !== undefined && !actorCanManage) {
+    throw new ForbiddenError("Only admins can edit notification content");
+  }
+
+  if (dto.isRead !== undefined && !isOwner && !actorCanManage) {
+    throw new ForbiddenError(
+      "You can only update read status on your own notifications",
+    );
+  }
+
+  if (!isOwner && !actorCanManage) {
+    throw new ForbiddenError("You can only access your own notifications");
+  }
 
   const notification = await notificationRepository.update(id, {
-    isRead: dto.isRead,
+    ...(dto.content !== undefined && { content: dto.content }),
+    ...(dto.isRead !== undefined && { isRead: dto.isRead }),
   });
 
   return toNotificationResponse(notification);
