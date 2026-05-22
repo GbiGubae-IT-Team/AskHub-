@@ -1,5 +1,6 @@
 import Joi from "joi";
 import { QuestionStatus } from "../../../generated/prisma/client.js";
+import { tagIdsSchema, tagsInputSchema } from "./tagIds.joi.js";
 
 export const updateQuestionSchema = Joi.object({
   content: Joi.string().trim().min(5).max(2000).optional(),
@@ -7,7 +8,8 @@ export const updateQuestionSchema = Joi.object({
   status: Joi.string()
     .valid(...Object.values(QuestionStatus))
     .optional(),
-  tagIds: Joi.array().items(Joi.string().uuid()).max(10).optional(),
+  tagIds: tagIdsSchema.optional(),
+  tags: tagsInputSchema.optional(),
 })
   .min(1)
   .unknown(false)
