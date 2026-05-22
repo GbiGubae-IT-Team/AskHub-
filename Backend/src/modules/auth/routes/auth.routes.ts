@@ -3,6 +3,7 @@ import { asyncHandler } from "../../../core/utils/asyncHandler.js";
 import {
   loginController,
   meController,
+  refreshController,
   registerController,
 } from "../controllers/index.js";
 import {
@@ -14,6 +15,7 @@ const router = Router();
 
 router.post("/register", optionalAuthenticate, asyncHandler(registerController));
 router.post("/login", asyncHandler(loginController));
+router.post("/refresh", asyncHandler(refreshController));
 router.get("/me", authenticate, asyncHandler(meController));
 
 export default router;
