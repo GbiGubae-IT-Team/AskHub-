@@ -3,6 +3,7 @@ import { authRoutes } from "../modules/auth/index.js";
 import { userRoutes } from "../modules/users/index.js";
 import { roomRoutes } from "../modules/rooms/index.js";
 import { questionRoutes } from "../modules/questions/index.js";
+import { messageRoutes } from "../modules/messages/index.js";
 
 const router = Router();
 
@@ -10,6 +11,7 @@ router.use("/auth", authRoutes);
 router.use("/users", userRoutes);
 router.use("/rooms", roomRoutes);
 router.use("/questions", questionRoutes);
+router.use("/messages", messageRoutes);
 
 router.get("/health", (req, res) => {
   res.status(200).json({
