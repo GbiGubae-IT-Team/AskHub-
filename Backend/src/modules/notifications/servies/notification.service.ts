@@ -93,6 +93,24 @@ const buildListFilters = (
   };
 };
 
+/** Internal helper for other modules (e.g. answers) — no admin permission required. */
+export const sendNotificationToUser = async (params: {
+  userId: string;
+  content: string;
+  createdById: string;
+}) => {
+  const user = await notificationRepository.findActiveUser(params.userId);
+  if (!user) {
+    return null;
+  }
+
+  return notificationRepository.create({
+    content: params.content,
+    userId: params.userId,
+    createdById: params.createdById,
+  });
+};
+
 export const createNotificationService = async (
   body: unknown,
   actor: JwtPayload,

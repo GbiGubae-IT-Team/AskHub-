@@ -14,6 +14,8 @@ export const mapPrismaError = (error: unknown): never => {
           "Cannot remove this message because it is still referenced by other data.",
         Tag:
           "Cannot remove this tag because it is still linked to one or more questions.",
+        Answer:
+          "Cannot remove this answer because it is still referenced by other data.",
         User:
           "Cannot remove this user because they still have linked questions, answers, messages, votes, notifications, or rooms.",
       };
