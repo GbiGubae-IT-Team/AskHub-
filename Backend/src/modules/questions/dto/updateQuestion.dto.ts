@@ -4,4 +4,5 @@ export interface UpdateQuestionDto {
   content?: string;
   isAnonymous?: boolean;
   status?: QuestionStatus;
+  tagIds?: string[];
 }

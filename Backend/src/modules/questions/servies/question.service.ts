@@ -31,6 +31,16 @@ const canApprove = (role: JwtPayload["role"]) =>
 const canDelete = (role: JwtPayload["role"]) =>
   hasPermission(role, "question:delete");
 
+const canManageTags = (role: JwtPayload["role"]) =>
+  hasPermission(role, "tag:manage");
+
+const assertValidTagIds = async (tagIds: string[]) => {
+  const tagCount = await questionRepository.countTags(tagIds);
+  if (tagCount !== tagIds.length) {
+    throw new BadRequestError("One or more tags are invalid");
+  }
+};
+
 const canViewQuestion = (
   question: { authorId: string; status: QuestionStatus },
   actor?: JwtPayload,
@@ -68,10 +78,7 @@ export const createQuestionService = async (
   }
 
   if (dto.tagIds?.length) {
-    const tagCount = await questionRepository.countTags(dto.tagIds);
-    if (tagCount !== dto.tagIds.length) {
-      throw new BadRequestError("One or more tags are invalid");
-    }
+    await assertValidTagIds(dto.tagIds);
   }
 
   const question = await questionRepository.create({
@@ -197,11 +204,45 @@ export const updateQuestionService = async (
     throw new ForbiddenError("You cannot change the status of your own question");
   }
 
-  const question = await questionRepository.update(id, {
+  if (dto.tagIds !== undefined) {
+    const canRetagAsAuthor =
+      isAuthor &&
+      existing.status === QuestionStatus.PENDING &&
+      !actorCanApprove &&
+      !actorIsPrivileged;
+
+    const canRetagAsModerator =
+      actorCanApprove || actorIsPrivileged || canManageTags(actor.role);
+
+    if (!canRetagAsAuthor && !canRetagAsModerator) {
+      throw new ForbiddenError(
+        "You can only change tags on your own pending questions, or you need teacher/admin permissions",
+      );
+    }
+
+    if (
+      isAuthor &&
+      !actorCanApprove &&
+      !actorIsPrivileged &&
+      existing.status !== QuestionStatus.PENDING
+    ) {
+      throw new BadRequestError(
+        "Only pending questions can have tags changed by the author",
+      );
+    }
+
+    await assertValidTagIds(dto.tagIds);
+  }
+
+  let question = await questionRepository.update(id, {
     ...(dto.content !== undefined && { content: dto.content }),
     ...(dto.isAnonymous !== undefined && { isAnonymous: dto.isAnonymous }),
     ...(dto.status !== undefined && { status: dto.status }),
   });
+
+  if (dto.tagIds !== undefined) {
+    question = await questionRepository.setTags(id, dto.tagIds);
+  }
 
   return toQuestionResponse(question, actor, actorCanApprove);
 };

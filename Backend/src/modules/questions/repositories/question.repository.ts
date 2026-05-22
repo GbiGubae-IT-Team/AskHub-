@@ -111,6 +111,25 @@ export const questionRepository = {
     return mapQuestion(row);
   },
 
+  async setTags(questionId: string, tagIds: string[]) {
+    const row = await prisma.$transaction(async (tx) => {
+      await tx.questionTag.deleteMany({ where: { questionId } });
+
+      if (tagIds.length > 0) {
+        await tx.questionTag.createMany({
+          data: tagIds.map((tagId) => ({ questionId, tagId })),
+        });
+      }
+
+      return tx.question.findUniqueOrThrow({
+        where: { id: questionId },
+        select: questionSelect,
+      });
+    });
+
+    return mapQuestion(row);
+  },
+
   async delete(id: string) {
     return prisma.$transaction(async (tx) => {
       await tx.vote.deleteMany({ where: { questionId: id } });

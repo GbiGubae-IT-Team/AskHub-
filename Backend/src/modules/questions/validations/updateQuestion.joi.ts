@@ -7,6 +7,7 @@ export const updateQuestionSchema = Joi.object({
   status: Joi.string()
     .valid(...Object.values(QuestionStatus))
     .optional(),
+  tagIds: Joi.array().items(Joi.string().uuid()).max(10).optional(),
 })
   .min(1)
   .unknown(false)
