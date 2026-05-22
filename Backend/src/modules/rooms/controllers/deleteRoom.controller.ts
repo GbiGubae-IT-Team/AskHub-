@@ -1,6 +1,6 @@
 import type { Response } from "express";
 import type { AuthenticatedRequest } from "../../auth/types/auth.types.js";
-import { deleteRoomService } from "../servies/_.service.js";
+import { deleteRoomService } from "../servies/room.service.js";
 
 export const deleteRoomController = async (
   req: AuthenticatedRequest,

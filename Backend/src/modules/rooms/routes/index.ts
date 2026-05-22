@@ -1,1 +1,1 @@
-export { default as roomRoutes } from "./_.routes.js";
+export { default as roomRoutes } from "./room.routes.js";

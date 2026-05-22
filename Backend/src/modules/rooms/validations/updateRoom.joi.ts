@@ -9,4 +9,5 @@ export const updateRoomSchema = Joi.object({
   isActive: Joi.boolean().optional(),
 })
   .min(1)
+  .unknown(false)
   .messages({ "object.min": "At least one field is required to update" });

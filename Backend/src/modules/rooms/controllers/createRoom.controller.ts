@@ -1,6 +1,6 @@
 import type { Response } from "express";
 import type { AuthenticatedRequest } from "../../auth/types/auth.types.js";
-import { createRoomService } from "../servies/_.service.js";
+import { createRoomService } from "../servies/room.service.js";
 
 export const createRoomController = async (
   req: AuthenticatedRequest,

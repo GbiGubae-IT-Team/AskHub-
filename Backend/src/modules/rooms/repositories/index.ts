@@ -1,1 +1,1 @@
-export * from "./_.repository.js";
+export * from "./room.repository.js";

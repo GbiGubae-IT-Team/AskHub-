@@ -15,7 +15,6 @@ export const roomValidationService = {
   validateCreate(body: unknown): CreateRoomDto {
     const { error, value } = createRoomSchema.validate(body, {
       abortEarly: false,
-      stripUnknown: true,
     });
 
     if (error) {
@@ -28,7 +27,6 @@ export const roomValidationService = {
   validateUpdate(body: unknown): UpdateRoomDto {
     const { error, value } = updateRoomSchema.validate(body, {
       abortEarly: false,
-      stripUnknown: true,
     });
 
     if (error) {

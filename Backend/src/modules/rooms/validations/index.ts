@@ -1,3 +1,3 @@
-export * from "./create_.joi.js";
-export * from "./update_.joi.js";
+export * from "./createRoom.joi.js";
+export * from "./updateRoom.joi.js";
 export * from "./listRooms.joi.js";

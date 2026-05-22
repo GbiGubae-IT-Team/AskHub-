@@ -6,4 +6,4 @@ export const createRoomSchema = Joi.object({
   type: Joi.string()
     .valid(...Object.values(RoomType))
     .required(),
-});
+}).unknown(false);

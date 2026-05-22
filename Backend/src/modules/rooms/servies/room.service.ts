@@ -5,14 +5,14 @@ import { ForbiddenError } from "../../../core/errors/ForbiddenError.js";
 import { NotFoundError } from "../../../core/errors/NotFoundError.js";
 import { mapPrismaError } from "../../../core/utils/prismaErrors.js";
 import type { JwtPayload } from "../../../shared/types/types.js";
-import { roomRepository } from "../repositories/_.repository.js";
+import { roomRepository } from "../repositories/room.repository.js";
 import {
   toRoomResponse,
   type ListRoomsQuery,
   type PaginatedRoomsResponse,
   type RoomResponse,
 } from "../types/room.types.js";
-import { roomValidationService } from "./_Validation.service.js";
+import { roomValidationService } from "./roomValidation.service.js";
 
 const canDeleteRoom = (role: JwtPayload["role"]) =>
   hasPermission(role, "room:delete");
