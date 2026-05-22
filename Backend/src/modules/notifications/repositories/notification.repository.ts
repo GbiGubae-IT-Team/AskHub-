@@ -46,15 +46,13 @@ export const notificationRepository = {
   async create(data: {
     content: string;
     userId: string;
-    createdById?: string;
+    createdById: string;
   }) {
     return prisma.notification.create({
       data: {
         content: data.content,
         user: { connect: { id: data.userId } },
-        ...(data.createdById && {
-          createdBy: { connect: { id: data.createdById } },
-        }),
+        createdBy: { connect: { id: data.createdById } },
       },
       select: notificationSelect,
     });

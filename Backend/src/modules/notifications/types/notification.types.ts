@@ -16,7 +16,7 @@ export interface NotificationResponse {
   createdAt: Date;
 }
 
-export type NotificationListScope = "received" | "sent";
+export type NotificationListScope = "received" | "sent" | "all";
 
 export interface ListNotificationsQuery {
   page: number;

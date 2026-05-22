@@ -45,20 +45,45 @@ const canAccessNotification = (
   return false;
 };
 
+const resolveListScope = (
+  actor: JwtPayload,
+  requested?: NotificationListScope,
+): NotificationListScope => {
+  if (requested) {
+    return requested;
+  }
+
+  return canCreate(actor.role) ? "all" : "received";
+};
+
 const buildListFilters = (
   actor: JwtPayload,
   scope: NotificationListScope,
 ) => {
-  if (scope === "sent") {
+  if (scope === "sent" || scope === "all") {
     if (!canCreate(actor.role)) {
       throw new ForbiddenError(
-        "Only admins can view notifications they created",
+        "Only admins can view sent or combined notification lists",
       );
     }
+  }
 
+  if (scope === "sent") {
     return {
       where: { createdById: actor.userId },
       unreadWhere: { createdById: actor.userId },
+    };
+  }
+
+  if (scope === "all") {
+    return {
+      where: {
+        OR: [
+          { userId: actor.userId },
+          { createdById: actor.userId },
+        ],
+      },
+      unreadWhere: { userId: actor.userId },
     };
   }
 
@@ -108,10 +133,9 @@ export const listNotificationsService = async (
     notificationValidationService.validateListQuery(query);
   const skip = (page - 1) * limit;
 
-  const { where, unreadWhere } = buildListFilters(
-    actor,
-    scope ?? "received",
-  );
+  const effectiveScope = resolveListScope(actor, scope);
+
+  const { where, unreadWhere } = buildListFilters(actor, effectiveScope);
 
   const { items, total, unreadCount } = await notificationRepository.findMany({
     where: {
