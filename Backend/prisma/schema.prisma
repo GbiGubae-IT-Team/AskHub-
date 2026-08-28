@@ -57,12 +57,15 @@ model User {
   notifications         Notification[] @relation("NotificationRecipient")
   notificationsCreated  Notification[] @relation("NotificationCreator")
   roomsCreated          Room[]         @relation("RoomCreator")
+  roomsJoined           Room[]         @relation("RoomMembers")
 }
 
 model Question {
   id          String          @id @default(uuid())
+  title       String
   content     String
   isAnonymous Boolean         @default(true)
+  category    String?
 
   status      QuestionStatus  @default(PENDING)
 
@@ -97,7 +100,10 @@ model Answer {
 model Room {
   id          String    @id @default(uuid())
   name        String
+  description String?
   type        RoomType
+  category    String?
+  staffVerified Boolean @default(false)
 
   isActive    Boolean   @default(true)
 
@@ -109,6 +115,7 @@ model Room {
 
   messages    Message[]
   questions   Question[]
+  members     User[]    @relation("RoomMembers")
 }
 
 model Message {

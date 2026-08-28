@@ -11,6 +11,8 @@ import {
   getRoomByIdController,
   listRoomsController,
   updateRoomController,
+  joinRoomController,
+  leaveRoomController,
 } from "../controllers/index.js";
 
 const router = Router();
@@ -34,5 +36,8 @@ router.delete(
   requirePermission("room:delete"),
   asyncHandler(deleteRoomController),
 );
+
+router.post("/:id/join", authenticate, asyncHandler(joinRoomController));
+router.delete("/:id/leave", authenticate, asyncHandler(leaveRoomController));
 
 export default router;
