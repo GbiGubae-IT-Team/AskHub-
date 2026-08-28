@@ -144,3 +144,44 @@ export const deleteRoomService = async (
     mapPrismaError(error);
   }
 };
+
+export const joinRoomService = async (
+  roomId: string,
+  actor: JwtPayload,
+): Promise<void> => {
+  const room = await roomRepository.findById(roomId, false);
+  if (!room) {
+    throw new NotFoundError("Room not found or inactive");
+  }
+
+  try {
+    await roomRepository.update(roomId, {
+      members: {
+        connect: { id: actor.userId }
+      }
+    } as any);
+  } catch (error) {
+    mapPrismaError(error);
+  }
+};
+
+export const leaveRoomService = async (
+  roomId: string,
+  actor: JwtPayload,
+): Promise<void> => {
+  const room = await roomRepository.findById(roomId, false);
+  if (!room) {
+    throw new NotFoundError("Room not found or inactive");
+  }
+
+  try {
+    await roomRepository.update(roomId, {
+      members: {
+        disconnect: { id: actor.userId }
+      }
+    } as any);
+  } catch (error) {
+    mapPrismaError(error);
+  }
+};
+
