@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Menu, X, Bell } from 'lucide-react';
 import { SignInModal } from './SignInModal';
 import { NotificationModal } from './NotificationModal';
+import { SuccessModal } from './SuccessModal';
+import { apiFetch, getAuthToken } from '../api';
 
 interface HeaderProps {
   onGoToStaff?: () => void;
@@ -14,6 +16,9 @@ export function Header({ onGoToStaff, onGoToRoom }: HeaderProps) {
   const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
   const [isStaffSignInModalOpen, setIsStaffSignInModalOpen] = useState(false);
   const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [questionText, setQuestionText] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [notifications, setNotifications] = useState([
     { id: 1, message: 'Your question "How can I trust God?" got answered!', time: '2 minutes ago', read: false },
     { id: 2, message: 'New room created: "Prayer Warriors"', time: '1 hour ago', read: false },
@@ -43,6 +48,31 @@ export function Header({ onGoToStaff, onGoToRoom }: HeaderProps) {
 
   const handleMarkAllAsRead = () => {
     setNotifications(notifications.map(n => ({ ...n, read: true })));
+  };
+
+  const handleAskQuestion = async () => {
+    if (!questionText.trim()) return;
+    
+    const token = getAuthToken();
+    if (!token) {
+      setIsSignInModalOpen(true);
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await apiFetch('/questions', {
+        method: 'POST',
+        body: JSON.stringify({ content: questionText, isAnonymous: true }),
+      });
+      setQuestionText('');
+      setIsSuccessModalOpen(true);
+    } catch (error: any) {
+      console.error('Failed to submit question:', error);
+      alert(error.message || 'Failed to submit question. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -84,13 +114,17 @@ export function Header({ onGoToStaff, onGoToRoom }: HeaderProps) {
               <input
                 type="text"
                 placeholder="Ask us anything"
+                value={questionText}
+                onChange={(e) => setQuestionText(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAskQuestion()}
                 className="flex-1 px-4 py-2 bg-white rounded text-sm focus:outline-none focus:ring-2 focus:ring-white/50"
               />
               <button
-                onClick={() => setIsSignInModalOpen(true)}
-                className="bg-[#F5A623] hover:bg-[#E09612] text-white font-bold px-6 py-2 rounded transition-colors"
+                onClick={handleAskQuestion}
+                disabled={isSubmitting}
+                className="bg-[#F5A623] hover:bg-[#E09612] text-white font-bold px-6 py-2 rounded transition-colors disabled:opacity-50"
               >
-                GO
+                {isSubmitting ? '...' : 'GO'}
               </button>
               {/* Notification Icon */}
               <button
@@ -119,13 +153,17 @@ export function Header({ onGoToStaff, onGoToRoom }: HeaderProps) {
             <input
               type="text"
               placeholder="Ask us anything"
+              value={questionText}
+              onChange={(e) => setQuestionText(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAskQuestion()}
               className="flex-1 px-4 py-2 bg-white rounded text-sm focus:outline-none focus:ring-2 focus:ring-white/50"
             />
             <button
-              onClick={() => setIsSignInModalOpen(true)}
-              className="bg-[#F5A623] hover:bg-[#E09612] text-white font-bold px-6 py-2 rounded transition-colors"
+              onClick={handleAskQuestion}
+              disabled={isSubmitting}
+              className="bg-[#F5A623] hover:bg-[#E09612] text-white font-bold px-6 py-2 rounded transition-colors disabled:opacity-50"
             >
-              GO
+              {isSubmitting ? '...' : 'GO'}
             </button>
           </div>
         </div>
@@ -229,6 +267,12 @@ export function Header({ onGoToStaff, onGoToRoom }: HeaderProps) {
         notifications={notifications}
         onMarkAsRead={handleMarkAsRead}
         onMarkAllAsRead={handleMarkAllAsRead}
+      />
+
+      {/* Success Modal */}
+      <SuccessModal 
+        isOpen={isSuccessModalOpen} 
+        onClose={() => setIsSuccessModalOpen(false)} 
       />
     </>
   );
