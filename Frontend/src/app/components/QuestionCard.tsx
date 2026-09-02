@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 interface QuestionCardProps {
   category: string;
   title: string;
@@ -6,6 +8,13 @@ interface QuestionCardProps {
 }
 
 export function QuestionCard({ category, title, preview, isAnswered }: QuestionCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const TEXT_LIMIT = 150;
+  
+  const safePreview = preview || '';
+  const isLongText = safePreview.length > TEXT_LIMIT;
+  const displayText = (isExpanded || !isLongText) ? safePreview : safePreview.slice(0, TEXT_LIMIT).trim() + '...';
+
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 mb-4 hover:shadow-md transition-shadow">
       <div className="flex items-center gap-2 mb-2">
@@ -16,11 +25,17 @@ export function QuestionCard({ category, title, preview, isAnswered }: QuestionC
         </span>
         <span className="text-sm text-gray-600">· {category}</span>
       </div>
-      <h3 className="font-semibold mb-2">{title}</h3>
-      <p className="text-gray-600 text-sm mb-3">{preview}</p>
-      <button className="text-[#2D6DB5] text-sm font-medium hover:underline">
-        MORE
-      </button>
+      {title && <h3 className="font-semibold mb-2">{title}</h3>}
+      {safePreview && <p className="text-gray-600 text-sm mb-3 whitespace-pre-wrap">{displayText}</p>}
+      
+      {isLongText && (
+        <button 
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="text-[#2D6DB5] text-sm font-medium hover:underline"
+        >
+          {isExpanded ? 'LESS' : 'MORE'}
+        </button>
+      )}
     </div>
   );
 }
