@@ -71,13 +71,32 @@ export function JoinRoomsModal({ rooms, joinedIds, isOpen, onClose, onJoin }: Jo
       setErrorMsg('Please enter a 6-digit key');
       return;
     }
-    // Check if matching room exists in rooms list
+
+    // Check if matching room exists in rooms list (this works for staff)
     const foundRoom = rooms.find(r => r.code === code);
     if (foundRoom) {
       handleStartJoin(foundRoom);
       setPasscode(code);
       return;
     }
+
+    // For students, the backend strips the 'code' field for security.
+    // We can attempt to join the available rooms with the provided code.
+    setIsSubmitting(true);
+    setErrorMsg('');
+    
+    for (const r of available) {
+      try {
+        await onJoin(r, code);
+        setDirectCode('');
+        setIsSubmitting(false);
+        return; // Success! onJoin handles navigation and closing the modal.
+      } catch (err) {
+        // Incorrect code for this room, try the next one
+      }
+    }
+    
+    setIsSubmitting(false);
     setErrorMsg('No active room found with this code.');
   };
 

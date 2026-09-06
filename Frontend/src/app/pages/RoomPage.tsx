@@ -107,7 +107,7 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
     <div className="bg-[#2D6DB5] rounded-lg p-5 text-white">
       <h3 className="font-bold text-base mb-2">About this Room</h3>
       <p className="text-white/80 text-sm leading-relaxed mb-4">
-        {activeRoom?.description || 'Moderated by our Staff Chaplains, this room is dedicated to open, honest dialogue about the intersection of student life and faith.'}
+        {activeRoom?.description || 'This room is a space for open dialogue. Feel free to ask questions and share your thoughts with the community.'}
       </p>
       <div className="flex items-center gap-4 text-xs text-white/70">
         <span className="flex items-center gap-1.5">
