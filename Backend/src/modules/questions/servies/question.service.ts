@@ -18,6 +18,7 @@ import {
   type QuestionResponse,
 } from "../types/question.types.js";
 import { questionValidationService } from "./questionValidation.service.js";
+import prisma from "../../../config/db.js";
 
 const canCreate = (role: JwtPayload["role"]) =>
   hasPermission(role, "question:create");
@@ -62,13 +63,17 @@ const canViewQuestion = (
 
 export const createQuestionService = async (
   body: unknown,
-  actor: JwtPayload,
+  actor?: JwtPayload,
 ): Promise<QuestionResponse> => {
-  if (!canCreate(actor.role)) {
+  if (actor && !canCreate(actor.role)) {
     throw new ForbiddenError("You do not have permission to create questions");
   }
 
   const dto = questionValidationService.validateCreate(body);
+
+  if (!actor && !dto.roomId) {
+    throw new ForbiddenError("Authentication is required to ask public questions");
+  }
 
   if (dto.roomId) {
     const room = await questionRepository.findActiveRoom(dto.roomId);
@@ -81,16 +86,25 @@ export const createQuestionService = async (
     await assertValidTagIds(dto.tagIds);
   }
 
+  let authorId = actor?.userId;
+  if (!authorId) {
+    let anon = await prisma.user.findFirst({ where: { email: 'anon@askhub.local' }});
+    if (!anon) {
+      anon = await prisma.user.create({ data: { anonymousId: 'Anonymous Guest', email: 'anon@askhub.local', role: 'STUDENT' }});
+    }
+    authorId = anon.id;
+  }
+
   const question = await questionRepository.create({
     ...(dto.title !== undefined && { title: dto.title }),
     content: dto.content,
     isAnonymous: dto.isAnonymous ?? true,
-    authorId: actor.userId,
+    authorId: authorId,
     ...(dto.roomId !== undefined && { roomId: dto.roomId }),
     ...(dto.tagIds !== undefined && { tagIds: dto.tagIds }),
   });
 
-  return toQuestionResponse(question, actor, canApprove(actor.role));
+  return toQuestionResponse(question, actor, actor ? canApprove(actor.role) : false);
 };
 
 export const listQuestionsService = async (

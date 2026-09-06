@@ -25,8 +25,7 @@ router.get(
 
 router.post(
   "/",
-  authenticate,
-  requirePermission("question:create"),
+  optionalAuthenticate,
   asyncHandler(createQuestionController),
 );
 

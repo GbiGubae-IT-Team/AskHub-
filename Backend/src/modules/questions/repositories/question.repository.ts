@@ -202,7 +202,9 @@ export const buildListWhere = (params: {
     };
   }
 
-  const publicStatuses: QuestionStatus[] = ["APPROVED", "ANSWERED"];
+  const publicStatuses: QuestionStatus[] = (roomId !== undefined && roomId !== null)
+    ? ["APPROVED", "ANSWERED", "PENDING"]
+    : ["APPROVED", "ANSWERED"];
 
   if (actorUserId) {
     if (status !== undefined) {
@@ -230,7 +232,7 @@ export const buildListWhere = (params: {
   }
 
   // Unauthenticated / public access:
-  // ONLY return APPROVED or ANSWERED questions without requiring any user authentication!
+  // Return publicStatuses questions (which includes PENDING inside rooms) without requiring user authentication!
   if (status !== undefined) {
     if (publicStatuses.includes(status)) {
       return {
@@ -238,7 +240,7 @@ export const buildListWhere = (params: {
         ...(roomId !== undefined && { roomId }),
       };
     }
-    // If an unauthenticated visitor tries to request PENDING or REJECTED, deny by returning empty
+    // If an unauthenticated visitor tries to request an unavailable status, deny by returning empty
     return {
       status: { in: [] },
       ...(roomId !== undefined && { roomId }),
