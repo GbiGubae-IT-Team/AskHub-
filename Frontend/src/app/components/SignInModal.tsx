@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { apiFetch, setAuthToken } from '../api';
 
@@ -11,6 +11,8 @@ interface SignInModalProps {
   noticeMessage?: string;
   showGuestOption?: boolean;
   submitButtonText?: string;
+  initialMode?: 'login' | 'register';
+  onModeChange?: (mode: 'login' | 'register') => void;
   onSubmit?: () => void;
 }
 
@@ -23,6 +25,8 @@ export function SignInModal({
   noticeMessage = "All questions and interactions are completely confidential and anonymous.",
   showGuestOption = true,
   submitButtonText = "Join now",
+  initialMode = 'login',
+  onModeChange,
   onSubmit
 }: SignInModalProps) {
   const [email, setEmail] = useState('');
@@ -30,7 +34,21 @@ export function SignInModal({
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<{email?: string, password?: string}>({});
   const [success, setSuccess] = useState('');
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [mode, setMode] = useState<'login' | 'register'>(initialMode);
+
+  useEffect(() => {
+    if (initialMode) {
+      setMode(initialMode);
+    }
+  }, [initialMode]);
+
+  const switchMode = (newMode: 'login' | 'register') => {
+    setMode(newMode);
+    setError('');
+    setSuccess('');
+    setFieldErrors({});
+    onModeChange?.(newMode);
+  };
 
   if (!isOpen) return null;
 
@@ -125,14 +143,14 @@ export function SignInModal({
                 {mode === 'login' ? (
                   <p className="text-xs text-gray-600">
                     Need an account?{' '}
-                    <button type="button" onClick={() => { setMode('register'); setError(''); setSuccess(''); }} className="text-[#2D6DB5] hover:underline font-medium">
+                    <button type="button" onClick={() => switchMode('register')} className="text-[#2D6DB5] hover:underline font-medium cursor-pointer">
                       Register
                     </button>
                   </p>
                 ) : (
                   <p className="text-xs text-gray-600">
                     Already have an account?{' '}
-                    <button type="button" onClick={() => { setMode('login'); setError(''); setSuccess(''); }} className="text-[#2D6DB5] hover:underline font-medium">
+                    <button type="button" onClick={() => switchMode('login')} className="text-[#2D6DB5] hover:underline font-medium cursor-pointer">
                       Sign In
                     </button>
                   </p>

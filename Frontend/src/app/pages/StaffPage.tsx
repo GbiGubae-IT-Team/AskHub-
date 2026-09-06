@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router';
 import {
-  Menu,
-  Search,
+  ArrowLeft,
   Plus,
   MessageSquare,
   Grid,
   Users,
-  User,
   X,
   KeyRound,
   Copy,
@@ -52,9 +51,22 @@ interface StaffPageProps {
 }
 
 export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState('QUESTIONS');
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [activeNav, setActiveNav] = useState('Questions');
+
+  const handleBack = () => {
+    if (onBack) onBack();
+    else navigate('/');
+  };
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tabParam = params.get('tab')?.toUpperCase();
+    if (tabParam && ['QUESTIONS', 'ROOMS', 'STAFF', 'HISTORY'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [location.search]);
 
   // Room modal & state
   const [isCreateRoomOpen, setIsCreateRoomOpen] = useState(false);
@@ -199,10 +211,10 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
       : questions.filter((q) => q.status === statusFilter);
 
   const navItems = [
-    { label: 'Questions', icon: MessageSquare },
-    { label: 'Rooms', icon: Grid },
-    { label: 'Staff', icon: Users },
-    { label: 'Profile', icon: User },
+    { label: 'Questions', icon: MessageSquare, tab: 'QUESTIONS' },
+    { label: 'Rooms', icon: Grid, tab: 'ROOMS' },
+    { label: 'Staff', icon: Users, tab: 'STAFF' },
+    { label: 'History', icon: History, tab: 'HISTORY' },
   ];
 
   const tabs = ['QUESTIONS', 'ROOMS', 'STAFF', 'HISTORY'];
@@ -235,16 +247,13 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
       <header className="w-full bg-[#2D6DB5] flex-shrink-0">
         <div className="flex items-center gap-3 px-4 py-3">
           <button
-            onClick={() => setIsDrawerOpen(true)}
-            className="text-white p-1"
-            aria-label="Open menu"
+            onClick={handleBack}
+            className="text-white p-1 hover:bg-white/10 rounded transition-colors cursor-pointer"
+            aria-label="Back to Home"
           >
-            <Menu size={24} />
+            <ArrowLeft size={24} />
           </button>
           <h1 className="text-white text-xl font-bold flex-1">GIBI-GUBAE</h1>
-          <button className="text-white p-1" aria-label="Search">
-            <Search size={22} />
-          </button>
         </div>
 
         {/* Amharic Psalm */}
@@ -258,8 +267,8 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
           </p>
         </div>
 
-        {/* Tabs */}
-        <nav className="flex border-t border-white/20">
+        {/* Tabs - Hidden on mobile, flex on desktop */}
+        <nav className="hidden md:flex border-t border-white/20">
           {tabs.map((tab) => (
             <button
               key={tab}
@@ -275,56 +284,6 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
           ))}
         </nav>
       </header>
-
-      {/* Mobile Drawer Overlay */}
-      {isDrawerOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40"
-          onClick={() => setIsDrawerOpen(false)}
-        />
-      )}
-
-      {/* Mobile Drawer */}
-      <div
-        className={`fixed top-0 left-0 h-full w-64 bg-[#2D6DB5] z-50 transform transition-transform duration-300 ease-in-out flex flex-col ${
-          isDrawerOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        <div className="flex items-center justify-between p-4 border-b border-white/20">
-          <h2 className="text-white font-bold">Menu</h2>
-          <button onClick={() => setIsDrawerOpen(false)} className="text-white p-1">
-            <span className="text-xl font-bold">✕</span>
-          </button>
-        </div>
-        <nav className="py-2 flex-1 overflow-y-auto">
-          {tabs.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => {
-                setActiveTab(tab);
-                setIsDrawerOpen(false);
-              }}
-              className={`w-full text-left px-6 py-4 transition-colors ${
-                activeTab === tab
-                  ? 'bg-white/20 text-white font-medium border-l-4 border-white'
-                  : 'text-white/80 hover:bg-white/10 hover:text-white'
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </nav>
-        {onBack && (
-          <div className="p-4 border-t border-white/20">
-            <button
-              onClick={onBack}
-              className="w-full bg-white/10 hover:bg-white/20 text-white font-medium py-3 rounded transition-colors text-sm"
-            >
-              Back to Home
-            </button>
-          </div>
-        )}
-      </div>
 
       {/* Main Content */}
       <main className="flex-1 px-4 sm:px-6 md:px-8 py-6 pb-24 md:pb-8 max-w-[1500px] w-full mx-auto">
@@ -649,7 +608,10 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
                       {/* Enter Room Button - Compact & Sharp */}
                       <button
                         type="button"
-                        onClick={() => onGoToRoom?.(room)}
+                        onClick={() => {
+                          if (onGoToRoom) onGoToRoom(room);
+                          else navigate(`/rooms/${room.id}`);
+                        }}
                         className="px-3.5 py-1.5 bg-[#2D6DB5] hover:bg-[#245A94] text-white text-xs font-bold rounded-none transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
                       >
                         <span>Enter Room</span>
@@ -885,17 +847,12 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
 
       {/* Bottom Navigation — small screens only */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex z-30">
-        {navItems.map(({ label, icon: Icon }) => (
+        {navItems.map(({ label, icon: Icon, tab }) => (
           <button
             key={label}
-            onClick={() => {
-              setActiveNav(label);
-              if (label === 'Questions') setActiveTab('QUESTIONS');
-              if (label === 'Rooms') setActiveTab('ROOMS');
-              if (label === 'Staff') setActiveTab('STAFF');
-            }}
-            className={`flex-1 flex flex-col items-center justify-center py-2.5 gap-0.5 transition-colors ${
-              activeNav === label ? 'text-[#2D6DB5]' : 'text-gray-400 hover:text-gray-600'
+            onClick={() => setActiveTab(tab)}
+            className={`flex-1 flex flex-col items-center justify-center py-2.5 gap-0.5 transition-colors cursor-pointer ${
+              activeTab === tab ? 'text-[#2D6DB5]' : 'text-gray-400 hover:text-gray-600'
             }`}
           >
             <Icon size={20} />

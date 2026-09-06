@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router';
 import { Menu, X, Bell } from 'lucide-react';
 import { SignInModal } from './SignInModal';
 import { NotificationModal } from './NotificationModal';
@@ -8,9 +9,11 @@ import { apiFetch, getAuthToken } from '../api';
 interface HeaderProps {
   onGoToStaff?: () => void;
   onGoToRoom?: () => void;
+  onGoToSignIn?: () => void;
 }
 
-export function Header({ onGoToStaff, onGoToRoom }: HeaderProps) {
+export function Header({ onGoToStaff, onGoToRoom, onGoToSignIn }: HeaderProps) {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('Faith');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
@@ -37,7 +40,7 @@ export function Header({ onGoToStaff, onGoToRoom }: HeaderProps) {
 
   const handleStaffSignIn = () => {
     setIsDrawerOpen(false);
-    setIsStaffSignInModalOpen(true);
+    navigate('/signin');
   };
 
   const handleMarkAsRead = (id: number) => {
@@ -55,7 +58,7 @@ export function Header({ onGoToStaff, onGoToRoom }: HeaderProps) {
     
     const token = getAuthToken();
     if (!token) {
-      setIsSignInModalOpen(true);
+      navigate('/signin');
       return;
     }
 
@@ -140,8 +143,20 @@ export function Header({ onGoToStaff, onGoToRoom }: HeaderProps) {
                 )}
               </button>
               <button
-                onClick={() => setIsStaffSignInModalOpen(true)}
-                className="bg-white/10 hover:bg-white/20 text-white font-medium px-4 py-2 rounded transition-colors text-sm whitespace-nowrap"
+                onClick={() => {
+                  const token = getAuthToken();
+                  if (token) {
+                    try {
+                      const payload = JSON.parse(atob(token.split('.')[1]));
+                      if (['TEACHER', 'ADMIN', 'SUPER_ADMIN'].includes(payload?.role)) {
+                        navigate('/staff');
+                        return;
+                      }
+                    } catch (e) {}
+                  }
+                  navigate('/signin');
+                }}
+                className="bg-white/10 hover:bg-white/20 text-white font-medium px-4 py-2 rounded transition-colors text-sm whitespace-nowrap cursor-pointer"
               >
                 Staff Sign In
               </button>

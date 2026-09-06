@@ -1,5 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Menu, Search, MessageSquare, Grid, Users, User, Users2, ShieldCheck, Send } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router';
+import {
+  ArrowLeft,
+  MessageSquare,
+  Grid,
+  Users,
+  Users2,
+  ShieldCheck,
+  Send,
+  History,
+} from 'lucide-react';
 import { apiFetch, getAuthToken } from '../api';
 
 interface RoomPageProps {
@@ -16,13 +26,45 @@ interface RoomPageProps {
 }
 
 export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
+  const navigate = useNavigate();
+  const { roomId } = useParams<{ roomId: string }>();
+  const [room, setRoom] = useState<any>(activeRoom || null);
+  const [activeTab, setActiveTab] = useState('QUESTIONS');
   const [discussions, setDiscussions] = useState<any[]>([]);
-  const [activeNav, setActiveNav] = useState('Rooms');
   const [subject, setSubject] = useState('');
   const [question, setQuestion] = useState('');
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [replyInputs, setReplyInputs] = useState<Record<string, string>>({});
+
+  const handleBack = () => {
+    if (onBack) onBack();
+    else navigate('/');
+  };
+
+  useEffect(() => {
+    if (activeRoom) {
+      setRoom(activeRoom);
+    } else if (roomId) {
+      apiFetch(`/rooms/${roomId}`)
+        .then((res) => {
+          if (res?.data) setRoom(res.data);
+        })
+        .catch(console.error);
+    }
+  }, [activeRoom, roomId]);
+
+  const currentRoomId = room?.id || roomId;
+
+  const fetchQuestions = () => {
+    if (!currentRoomId) return;
+    apiFetch(`/questions?roomId=${currentRoomId}`)
+      .then((res) => setDiscussions(res?.data?.items || []))
+      .catch(console.error);
+  };
+
+  useEffect(() => {
+    fetchQuestions();
+  }, [currentRoomId]);
 
   const token = getAuthToken();
   let isStaff = false;
@@ -35,26 +77,28 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
     }
   }
 
-  const fetchQuestions = () => {
-    if (!activeRoom?.id) return;
-    apiFetch(`/questions?roomId=${activeRoom.id}`)
-      .then(res => setDiscussions(res?.data?.items || []))
-      .catch(console.error);
-  };
-
-  useEffect(() => {
-    fetchQuestions();
-  }, [activeRoom?.id]);
+  const tabs = ['QUESTIONS', 'ROOMS', 'STAFF', 'HISTORY'];
 
   const navItems = [
-    { label: 'Questions', icon: MessageSquare },
-    { label: 'Rooms', icon: Grid },
-    { label: 'Staff', icon: Users },
-    { label: 'Profile', icon: User }
+    { label: 'Questions', icon: MessageSquare, tab: 'QUESTIONS' },
+    { label: 'Rooms', icon: Grid, tab: 'ROOMS' },
+    { label: 'Staff', icon: Users, tab: 'STAFF' },
+    { label: 'History', icon: History, tab: 'HISTORY' },
   ];
 
+  const handleTabClick = (tab: string) => {
+    setActiveTab(tab);
+    if (tab === 'ROOMS') {
+      navigate('/');
+    } else if (tab === 'STAFF') {
+      navigate('/staff');
+    } else if (tab === 'HISTORY') {
+      navigate('/staff?tab=HISTORY');
+    }
+  };
+
   const handleSubmit = async () => {
-    if (!subject.trim() || !question.trim() || !activeRoom?.id) return;
+    if (!subject.trim() || !question.trim() || !currentRoomId) return;
     try {
       setIsSubmitting(true);
       const res = await apiFetch("/questions", { 
@@ -63,7 +107,7 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
           title: subject, 
           content: question, 
           isAnonymous: true,
-          roomId: activeRoom.id
+          roomId: currentRoomId
         }) 
       });
       setSubject('');
@@ -107,14 +151,14 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
     <div className="bg-[#2D6DB5] rounded-lg p-5 text-white">
       <h3 className="font-bold text-base mb-2">About this Room</h3>
       <p className="text-white/80 text-sm leading-relaxed mb-4">
-        {activeRoom?.description || 'This room is a space for open dialogue. Feel free to ask questions and share your thoughts with the community.'}
+        {room?.description || 'This room is a space for open dialogue. Feel free to ask questions and share your thoughts with the community.'}
       </p>
       <div className="flex items-center gap-4 text-xs text-white/70">
         <span className="flex items-center gap-1.5">
           <Users2 size={14} />
-          {activeRoom?.members || 1} Students
+          {room?.members || 1} Students
         </span>
-        {(activeRoom?.staffVerified ?? true) && (
+        {(room?.staffVerified ?? true) && (
           <span className="flex items-center gap-1.5">
             <ShieldCheck size={14} />
             Staff Verified
@@ -172,61 +216,45 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
       <header className="w-full bg-[#2D6DB5] flex-shrink-0">
         <div className="flex items-center gap-3 px-4 py-3">
           <button
-            onClick={() => setIsDrawerOpen(true)}
-            className="text-white p-1"
-            aria-label="Open menu"
+            onClick={handleBack}
+            className="text-white p-1 hover:bg-white/10 rounded transition-colors cursor-pointer"
+            aria-label="Back to Home"
           >
-            <Menu size={24} />
+            <ArrowLeft size={24} />
           </button>
           <h1 className="text-white text-xl font-bold flex-1">GIBI-GUBAE</h1>
-          <button className="text-white p-1" aria-label="Search">
-            <Search size={22} />
-          </button>
         </div>
-      </header>
 
-      {/* Mobile Drawer Overlay */}
-      {isDrawerOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40"
-          onClick={() => setIsDrawerOpen(false)}
-        />
-      )}
-
-      {/* Mobile Drawer */}
-      <div
-        className={`fixed top-0 left-0 h-full w-64 bg-[#2D6DB5] z-50 transform transition-transform duration-300 ease-in-out flex flex-col ${
-          isDrawerOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        <div className="flex items-center justify-between p-4 border-b border-white/20">
-          <h2 className="text-white font-bold">Menu</h2>
-          <button onClick={() => setIsDrawerOpen(false)} className="text-white p-1 text-xl font-bold">✕</button>
-        </div>
-        {onBack && (
-          <div className="p-4 border-t border-white/20 mt-auto">
+        {/* Desktop Top Navigation Tabs */}
+        <nav className="hidden md:flex border-t border-white/20">
+          {tabs.map((tab) => (
             <button
-              onClick={onBack}
-              className="w-full bg-white/10 hover:bg-white/20 text-white font-medium py-3 rounded transition-colors text-sm"
+              key={tab}
+              onClick={() => handleTabClick(tab)}
+              className={`flex-1 py-3 text-xs font-bold transition-colors cursor-pointer ${
+                activeTab === tab
+                  ? 'text-white border-b-2 border-[#F5A623]'
+                  : 'text-white/60 hover:text-white/90'
+              }`}
             >
-              Back to Home
+              {tab}
             </button>
-          </div>
-        )}
-      </div>
+          ))}
+        </nav>
+      </header>
 
       {/* Room Banner */}
       <section className="bg-[#2D6DB5] px-6 py-10 text-center text-white">
-        {activeRoom?.category && (
+        {room?.category && (
           <span className="inline-block bg-white/15 text-white/90 text-xs font-semibold px-3 py-1 rounded-full mb-3">
-            {activeRoom.category}
+            {room.category}
           </span>
         )}
         <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-3">
-          {activeRoom?.name || 'The Path to Spiritual Growth'}
+          {room?.name || 'The Path to Spiritual Growth'}
         </h2>
         <p className="text-white/85 text-sm md:text-base max-w-xl mx-auto leading-relaxed mb-5">
-          {activeRoom?.description || 'A space for students to discuss faith, challenges, and growth in a supportive community.'}
+          {room?.description || 'A space for students to discuss faith, challenges, and growth in a supportive community.'}
         </p>
         <p className="text-white/60 text-xs md:text-sm italic max-w-lg mx-auto leading-relaxed font-light">
           የሰነፍ መንገድ በዓይኑ የቀናች ናት፤ ጠቢብ ግን ምክርን ይሰማል።
@@ -329,13 +357,14 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
         </div>
       </div>
 
+      {/* Bottom Navigation — small screens only */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex z-30">
-        {navItems.map(({ label, icon: Icon }) => (
+        {navItems.map(({ label, icon: Icon, tab }) => (
           <button
             key={label}
-            onClick={() => setActiveNav(label)}
-            className={`flex-1 flex flex-col items-center justify-center py-2.5 gap-0.5 transition-colors ${
-              activeNav === label ? 'text-[#2D6DB5]' : 'text-gray-400 hover:text-gray-600'
+            onClick={() => handleTabClick(tab)}
+            className={`flex-1 flex flex-col items-center justify-center py-2.5 gap-0.5 transition-colors cursor-pointer ${
+              activeTab === tab ? 'text-[#2D6DB5]' : 'text-gray-400 hover:text-gray-600'
             }`}
           >
             <Icon size={20} />
