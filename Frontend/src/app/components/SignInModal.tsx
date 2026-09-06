@@ -28,6 +28,7 @@ export function SignInModal({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<{email?: string, password?: string}>({});
   const [success, setSuccess] = useState('');
   const [mode, setMode] = useState<'login' | 'register'>('login');
 
@@ -37,6 +38,7 @@ export function SignInModal({
     e.preventDefault();
     setError('');
     setSuccess('');
+    setFieldErrors({});
 
     try {
       if (mode === 'login') {
@@ -56,10 +58,15 @@ export function SignInModal({
         setMode('login'); // switch back after registration
       }
     } catch (err: any) {
-      if (err.message?.includes('not approved')) {
+      const msg = err.message || '';
+      if (msg.includes('not approved')) {
         setError('not approved');
+      } else if (msg.includes('"email"')) {
+        setFieldErrors({ email: msg.replace(/"/g, '') });
+      } else if (msg.includes('"password"')) {
+        setFieldErrors({ password: msg.replace(/"/g, '') });
       } else {
-        setError(mode === 'login' ? 'Invalid credentials' : 'Failed to register');
+        setError(msg || (mode === 'login' ? 'Invalid credentials' : 'Failed to register'));
       }
     }
   };
@@ -88,9 +95,10 @@ export function SignInModal({
                   id="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#2D6DB5]"
+                  className={`w-full px-3 py-1.5 text-sm border ${fieldErrors.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-[#2D6DB5]'} rounded focus:outline-none focus:ring-2 transition-colors`}
                   placeholder="Enter your email"
                 />
+                {fieldErrors.email && <p className="text-red-500 text-[11px] font-medium mt-1">{fieldErrors.email}</p>}
               </div>
 
               <div>
@@ -100,9 +108,10 @@ export function SignInModal({
                   id="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#2D6DB5]"
+                  className={`w-full px-3 py-1.5 text-sm border ${fieldErrors.password ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-[#2D6DB5]'} rounded focus:outline-none focus:ring-2 transition-colors`}
                   placeholder="Enter your password"
                 />
+                {fieldErrors.password && <p className="text-red-500 text-[11px] font-medium mt-1">{fieldErrors.password}</p>}
               </div>
 
               {error && <div className="text-red-600 text-xs text-center font-medium mt-1">{error}</div>}

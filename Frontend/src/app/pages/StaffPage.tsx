@@ -100,8 +100,11 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
     setTimeout(() => setCopiedCode(null), 2000);
   };
 
+  const [createRoomError, setCreateRoomError] = useState<string | null>(null);
+
   const handleCreateRoom = async () => {
     if (!roomName.trim()) return;
+    setCreateRoomError(null);
     try {
       const res = await apiFetch("/rooms", {
         method: "POST",
@@ -122,8 +125,9 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
       setRoomDescription('');
       setIsCreateRoomOpen(false);
       fetchRooms();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to create room:", err);
+      setCreateRoomError(err.message || "Failed to create room. You may lack permission.");
     }
   };
 
@@ -812,10 +816,16 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
                 />
               </div>
 
-              <div className="p-3 bg-amber-50 border border-amber-300 rounded-none mb-5 text-xs text-amber-900 flex items-center gap-2">
+              <div className="p-3 bg-amber-50 border border-amber-300 rounded-none mb-4 text-xs text-amber-900 flex items-center gap-2">
                 <KeyRound size={16} className="text-[#E07B2A] flex-shrink-0" />
                 <span>A random 6-digit Room Key will be generated automatically for attendees.</span>
               </div>
+
+              {createRoomError && (
+                <div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-600 text-xs font-medium text-center">
+                  {createRoomError}
+                </div>
+              )}
 
               {/* Submit */}
               <button
