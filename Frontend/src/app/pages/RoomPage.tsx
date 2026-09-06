@@ -1,15 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Menu, Search, MessageSquare, Grid, Users, User, Users2, ShieldCheck } from 'lucide-react';
-import { apiFetch } from '../api';
-
-interface Discussion {
-  id: number;
-  author: string;
-  timeAgo: string;
-  isAnswered: boolean;
-  title: string;
-  preview: string;
-}
+import { Menu, Search, MessageSquare, Grid, Users, User, Users2, ShieldCheck, Send } from 'lucide-react';
+import { apiFetch, getAuthToken } from '../api';
 
 interface RoomPageProps {
   onBack?: () => void;
@@ -24,53 +15,36 @@ interface RoomPageProps {
   } | null;
 }
 
-const DISCUSSIONS: Discussion[] = [
-  {
-    id: 1,
-    author: 'Anonymous',
-    timeAgo: '2 hours ago',
-    isAnswered: true,
-    title: 'How can we balance academic pressure with daily prayer habits?',
-    preview: "I've been struggling lately to find enough time for consistent reflection during the exam season. Does anyone have specific routines that work well for them during high-stress..."
-  },
-  {
-    id: 2,
-    author: 'Anonymous',
-    timeAgo: '5 hours ago',
-    isAnswered: false,
-    title: 'Understanding the role of modern science in scriptural interpretation',
-    preview: "I was reading a paper on biology and it made me wonder how we should approach ancient texts when they seem to conflict with modern discoveries. Are there..."
-  },
-  {
-    id: 3,
-    author: 'Anonymous',
-    timeAgo: '1 day ago',
-    isAnswered: true,
-    title: 'What does spiritual growth look like in everyday life?',
-    preview: "I feel like spiritual growth is talked about a lot but I rarely see practical examples. How do you personally measure or notice growth in your own walk..."
-  },
-  {
-    id: 4,
-    author: 'Anonymous',
-    timeAgo: '2 days ago',
-    isAnswered: false,
-    title: 'Is it okay to feel angry at God during hard times?',
-    preview: "I went through a really difficult season recently and I found myself feeling genuinely angry. I wasn't sure if that was a sign of weak faith or something..."
-  }
-];
-
 export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
   const [discussions, setDiscussions] = useState<any[]>([]);
   const [activeNav, setActiveNav] = useState('Rooms');
   const [subject, setSubject] = useState('');
   const [question, setQuestion] = useState('');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [replyInputs, setReplyInputs] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    apiFetch("/questions")
+  const token = getAuthToken();
+  let isStaff = false;
+  if (token) {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      isStaff = ['TEACHER', 'ADMIN', 'SUPER_ADMIN'].includes(payload.role);
+    } catch (e) {
+      console.error("Failed to parse token", e);
+    }
+  }
+
+  const fetchQuestions = () => {
+    if (!activeRoom?.id) return;
+    apiFetch(`/questions?roomId=${activeRoom.id}`)
       .then(res => setDiscussions(res?.data?.items || []))
       .catch(console.error);
-  }, []);
+  };
+
+  useEffect(() => {
+    fetchQuestions();
+  }, [activeRoom?.id]);
 
   const navItems = [
     { label: 'Questions', icon: MessageSquare },
@@ -80,17 +54,77 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
   ];
 
   const handleSubmit = async () => {
-    if (!subject.trim() || !question.trim()) return;
+    if (!subject.trim() || !question.trim() || !activeRoom?.id) return;
     try {
-      await apiFetch("/questions", { method: "POST", body: JSON.stringify({ title: subject, content: question, isAnonymous: true }) });
-    } catch(err) {
+      setIsSubmitting(true);
+      const res = await apiFetch("/questions", { 
+        method: "POST", 
+        body: JSON.stringify({ 
+          title: subject, 
+          content: question, 
+          isAnonymous: true,
+          roomId: activeRoom.id
+        }) 
+      });
+      setSubject('');
+      setQuestion('');
+      
+      if (res?.data) {
+        setDiscussions(prev => [res.data, ...prev]);
+      } else {
+        fetchQuestions();
+      }
+    } catch(err: any) {
+      alert(err.message || "Failed to submit question. Please log in.");
       console.error(err);
+    } finally {
+      setIsSubmitting(false);
     }
-    setSubject('');
-    setQuestion('');
   };
 
-  const AskForm = () => (
+  const handleReplySubmit = async (questionId: string) => {
+    const content = replyInputs[questionId];
+    if (!content?.trim()) return;
+    
+    try {
+      await apiFetch("/answers", {
+        method: "POST",
+        body: JSON.stringify({ content: content.trim(), questionId }),
+      });
+      await apiFetch(`/questions/${questionId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: "ANSWERED" }),
+      });
+      
+      setReplyInputs(prev => ({ ...prev, [questionId]: '' }));
+      fetchQuestions();
+    } catch (err: any) {
+      alert(err.message || "Failed to submit reply.");
+    }
+  };
+
+  const renderRoomInfo = () => (
+    <div className="bg-[#2D6DB5] rounded-lg p-5 text-white">
+      <h3 className="font-bold text-base mb-2">About this Room</h3>
+      <p className="text-white/80 text-sm leading-relaxed mb-4">
+        {activeRoom?.description || 'Moderated by our Staff Chaplains, this room is dedicated to open, honest dialogue about the intersection of student life and faith.'}
+      </p>
+      <div className="flex items-center gap-4 text-xs text-white/70">
+        <span className="flex items-center gap-1.5">
+          <Users2 size={14} />
+          {activeRoom?.members || 1} Students
+        </span>
+        {(activeRoom?.staffVerified ?? true) && (
+          <span className="flex items-center gap-1.5">
+            <ShieldCheck size={14} />
+            Staff Verified
+          </span>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderAskForm = () => (
     <div className="bg-white rounded-lg shadow-sm p-5">
       <div className="flex items-center gap-2 mb-4">
         <MessageSquare size={18} className="text-[#2D6DB5]" />
@@ -121,10 +155,10 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
 
       <button
         onClick={handleSubmit}
-        disabled={!subject.trim() || !question.trim()}
-        className="w-full bg-[#F5A623] hover:bg-[#E09612] disabled:bg-gray-200 disabled:text-gray-400 text-white font-bold py-3 rounded-lg transition-colors uppercase tracking-wide text-sm"
+        disabled={!subject.trim() || !question.trim() || isSubmitting}
+        className="w-full bg-[#F5A623] hover:bg-[#E09612] disabled:bg-gray-200 disabled:text-gray-400 text-white font-bold py-3 rounded-lg transition-colors uppercase tracking-wide text-sm flex items-center justify-center gap-2"
       >
-        Submit Question
+        {isSubmitting ? 'Submitting...' : 'Submit Question'}
       </button>
       <p className="text-center text-xs text-gray-400 mt-3">
         Your post will be visible to all members of this room.
@@ -207,7 +241,6 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
 
           {/* Left — Active Discussions */}
           <div className="flex-1 min-w-0">
-            {/* Section header */}
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-[#2D6DB5] text-base">Active Discussions</h3>
               <span className="bg-gray-100 text-gray-600 text-xs font-semibold px-3 py-1 rounded-full">
@@ -215,12 +248,14 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
               </span>
             </div>
 
-            {/* Discussion cards */}
             <div className="space-y-4">
-              {discussions.map(d => (
+              {discussions.length === 0 ? (
+                 <div className="bg-white rounded-lg shadow-sm p-10 text-center text-gray-400">
+                    No discussions found in this room yet. Be the first to ask!
+                 </div>
+              ) : discussions.map(d => (
                 <div key={d.id} className="bg-white rounded-lg shadow-sm px-6 py-4 hover:shadow-md transition-shadow">
-                  {/* Meta row */}
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="flex flex-wrap gap-2 items-center justify-between mb-2">
                     <div>
                       <span className="text-xs font-semibold text-[#2D6DB5]">
                         {typeof d.author === 'object' ? (d.author?.anonymousId || d.author?.name || 'Anonymous') : (d.author || 'Anonymous')}
@@ -229,79 +264,71 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
                         {d.timeAgo || (d.createdAt ? new Date(d.createdAt).toLocaleDateString() : '')}
                       </span>
                     </div>
-                    <span className={`text-xs font-medium px-2.5 py-0.5 rounded ${
+                    <span className={`text-[10px] font-medium px-2.5 py-0.5 rounded uppercase tracking-wider ${
                       d.status === "ANSWERED"
                         ? 'bg-green-100 text-green-700'
+                        : d.status === "APPROVED" 
+                        ? 'bg-blue-100 text-blue-700'
                         : 'bg-orange-100 text-orange-600'
                     }`}>
-                      {d.status === "ANSWERED" ? 'Answered' : 'Unanswered'}
+                      {d.status}
                     </span>
                   </div>
 
-                  {/* Title */}
-                  <h4 className="font-bold text-gray-900 mb-1.5 leading-snug">{d.title}</h4>
+                  <h4 className="font-bold text-gray-900 mb-1.5 leading-snug">{d.title || 'Discussion'}</h4>
+                  <p className="text-sm text-gray-600 leading-relaxed mb-3 whitespace-pre-wrap">{d.content}</p>
 
-                  {/* Preview */}
-                  <p className="text-sm text-gray-600 leading-relaxed mb-3">{d.content}</p>
+                  {d.answers && d.answers.length > 0 && (
+                    <div className="mt-4 space-y-2">
+                      {d.answers.map((ans: any, idx: number) => (
+                        <div key={idx} className="bg-gray-50 border border-gray-100 rounded-md p-3 text-sm text-gray-700">
+                          <span className="font-bold text-[#2D6DB5] block mb-1 text-xs">Official Reply:</span>
+                          <p className="whitespace-pre-wrap leading-relaxed">{ans.content}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
-                  <button className="text-[#2D6DB5] text-sm font-medium hover:underline">
-                    MORE ›
-                  </button>
+                  {isStaff && (
+                    <div className="mt-4 pt-3 border-t border-gray-100 flex items-end gap-2">
+                      <div className="flex-1">
+                        <input
+                          type="text"
+                          value={replyInputs[d.id] || ''}
+                          onChange={(e) => setReplyInputs(prev => ({ ...prev, [d.id]: e.target.value }))}
+                          placeholder="Write an official reply..."
+                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2D6DB5] text-gray-700"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleReplySubmit(d.id);
+                          }}
+                        />
+                      </div>
+                      <button
+                        onClick={() => handleReplySubmit(d.id)}
+                        disabled={!replyInputs[d.id]?.trim()}
+                        className="bg-[#2D6DB5] hover:bg-[#235892] disabled:bg-gray-300 text-white px-3 py-2 rounded-md transition-colors"
+                      >
+                        <Send size={16} />
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Right Sidebar — desktop only */}
           <aside className="hidden md:flex flex-col gap-4 w-72 flex-shrink-0 sticky top-4">
-            {/* About this Room */}
-            <div className="bg-[#2D6DB5] rounded-lg p-5 text-white">
-              <h3 className="font-bold text-base mb-2">About this Room</h3>
-              <p className="text-white/80 text-sm leading-relaxed mb-4">
-                Moderated by our Staff Chaplains, this room is dedicated to open, honest dialogue about the intersection of student life and faith.
-              </p>
-              <div className="flex items-center gap-4 text-xs text-white/70">
-                <span className="flex items-center gap-1.5">
-                  <Users2 size={14} />
-                  128 Students
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <ShieldCheck size={14} />
-                  Staff Verified
-                </span>
-              </div>
-            </div>
-
-            {/* Ask a Question */}
-            <AskForm />
+            {renderRoomInfo()}
+            {renderAskForm()}
           </aside>
         </div>
 
-        {/* Mobile-only sidebar content — below discussions */}
         <div className="md:hidden mt-6 space-y-4">
-          {/* About this Room */}
-          <div className="bg-[#2D6DB5] rounded-lg p-5 text-white">
-            <h3 className="font-bold text-base mb-2">About this Room</h3>
-            <p className="text-white/80 text-sm leading-relaxed mb-4">
-              Moderated by our Staff Chaplains, this room is dedicated to open, honest dialogue about the intersection of student life and faith.
-            </p>
-            <div className="flex items-center gap-4 text-xs text-white/70">
-              <span className="flex items-center gap-1.5">
-                <Users2 size={14} />
-                128 Students
-              </span>
-              <span className="flex items-center gap-1.5">
-                <ShieldCheck size={14} />
-                Staff Verified
-              </span>
-            </div>
-          </div>
-
-          <AskForm />
+          {renderRoomInfo()}
+          {renderAskForm()}
         </div>
       </div>
 
-      {/* Bottom Navigation — small screens only */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex z-30">
         {navItems.map(({ label, icon: Icon }) => (
           <button

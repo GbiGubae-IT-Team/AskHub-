@@ -6,7 +6,7 @@ export function HotQuestions() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    apiFetch('/questions')
+    apiFetch('/questions?roomId=null')
       .then(res => {
         if (res?.data?.items) {
           const publicQuestions = res.data.items.filter(

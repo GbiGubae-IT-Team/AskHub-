@@ -77,6 +77,10 @@ export const questionValidationService = {
       throw new BadRequestError(formatJoiError(error));
     }
 
+    if (value.roomId === "null") {
+      value.roomId = null;
+    }
+
     return value as ListQuestionsQuery;
   },
 };

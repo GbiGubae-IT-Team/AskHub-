@@ -24,7 +24,7 @@ export default function App() {
   };
 
   const loadQuestions = () => {
-    apiFetch("/questions")
+    apiFetch("/questions?roomId=null")
       .then(res => setQuestions(res?.data?.items || []))
       .catch(console.error);
   };
@@ -126,17 +126,19 @@ export default function App() {
         </div>
       </main>
 
-      {/* Floating Join Rooms button — only shown when unjoined rooms exist */}
-      {hasUnjoinedRooms && (
+      {/* Floating Join Rooms button */}
+      {rooms.length > 0 && (
         <button
           onClick={() => setIsRoomModalOpen(true)}
           className="fixed bottom-6 right-6 z-40 flex items-center gap-2 bg-[#2D6DB5] hover:bg-[#245A94] text-white font-bold px-5 py-3 rounded-full shadow-lg transition-all hover:scale-105 active:scale-95"
         >
           <DoorOpen size={18} />
           <span className="text-sm">Join Rooms</span>
-          <span className="bg-[#F5A623] text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
-            {rooms.filter(r => !joinedRoomIds.has(r.id)).length}
-          </span>
+          {rooms.filter(r => !joinedRoomIds.has(r.id)).length > 0 && (
+            <span className="bg-[#F5A623] text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+              {rooms.filter(r => !joinedRoomIds.has(r.id)).length}
+            </span>
+          )}
         </button>
       )}
 

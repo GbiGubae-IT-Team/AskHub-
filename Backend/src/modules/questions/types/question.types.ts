@@ -66,7 +66,7 @@ export interface ListQuestionsQuery {
   page: number;
   limit: number;
   status?: QuestionStatus;
-  roomId?: string;
+  roomId?: string | null;
   mine?: boolean;
 }
 

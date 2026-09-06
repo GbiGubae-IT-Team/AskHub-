@@ -7,6 +7,9 @@ export const listQuestionsSchema = Joi.object({
   status: Joi.string()
     .valid(...Object.values(QuestionStatus))
     .optional(),
-  roomId: Joi.string().uuid().optional(),
+  roomId: Joi.alternatives().try(
+    Joi.string().uuid(),
+    Joi.string().valid("null")
+  ).optional(),
   mine: Joi.boolean().default(false),
 });

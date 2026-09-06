@@ -181,7 +181,7 @@ export const buildListWhere = (params: {
   actorUserId?: string;
   canModerate: boolean;
   status?: QuestionStatus;
-  roomId?: string;
+  roomId?: string | null;
   mine?: boolean;
 }): Prisma.QuestionWhereInput => {
   const { actorUserId, canModerate, status, roomId, mine } = params;
