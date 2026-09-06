@@ -4,6 +4,34 @@ export const getAuthToken = () => localStorage.getItem("token") || "";
 export const setAuthToken = (token: string) => localStorage.setItem("token", token);
 export const removeAuthToken = () => localStorage.removeItem("token");
 
+export interface DecodedUser {
+  userId: string;
+  role: string;
+  anonymousId: string;
+  exp?: number;
+}
+
+export const getCurrentUser = (): DecodedUser | null => {
+  const token = getAuthToken();
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    if (payload.exp && payload.exp * 1000 < Date.now()) {
+      removeAuthToken();
+      return null;
+    }
+    return payload;
+  } catch {
+    return null;
+  }
+};
+
+export const isApprovedStaff = (): boolean => {
+  const user = getCurrentUser();
+  if (!user) return false;
+  return ['TEACHER', 'ADMIN', 'SUPER_ADMIN'].includes(user.role);
+};
+
 export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
   const token = getAuthToken();
   const headers = {

@@ -15,8 +15,9 @@ import {
   ShieldCheck,
   Archive,
   History,
+  LogOut,
 } from 'lucide-react';
-import { apiFetch } from '../api';
+import { apiFetch, removeAuthToken, isApprovedStaff } from '../api';
 
 type QuestionStatusType = "PENDING" | "APPROVED" | "REJECTED" | "ANSWERED";
 
@@ -61,6 +62,10 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
   };
 
   useEffect(() => {
+    if (!isApprovedStaff()) {
+      navigate('/signin');
+      return;
+    }
     const params = new URLSearchParams(location.search);
     const tabParam = params.get('tab')?.toUpperCase();
     if (tabParam && ['QUESTIONS', 'ROOMS', 'STAFF', 'HISTORY'].includes(tabParam)) {
@@ -254,6 +259,17 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
             <ArrowLeft size={24} />
           </button>
           <h1 className="text-white text-xl font-bold flex-1">GIBI-GUBAE</h1>
+          <button
+            onClick={() => {
+              removeAuthToken();
+              navigate('/');
+            }}
+            className="text-white/80 hover:text-white hover:bg-white/10 px-2.5 py-1.5 rounded transition-colors flex items-center gap-1.5 text-xs font-medium cursor-pointer"
+            title="Sign Out"
+          >
+            <LogOut size={16} />
+            <span className="hidden sm:inline">Sign Out</span>
+          </button>
         </div>
 
         {/* Amharic Psalm */}

@@ -3,12 +3,9 @@ import { useNavigate, useParams } from 'react-router';
 import {
   ArrowLeft,
   MessageSquare,
-  Grid,
-  Users,
   Users2,
   ShieldCheck,
   Send,
-  History,
 } from 'lucide-react';
 import { apiFetch, getAuthToken } from '../api';
 
@@ -29,7 +26,6 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
   const navigate = useNavigate();
   const { roomId } = useParams<{ roomId: string }>();
   const [room, setRoom] = useState<any>(activeRoom || null);
-  const [activeTab, setActiveTab] = useState('QUESTIONS');
   const [discussions, setDiscussions] = useState<any[]>([]);
   const [subject, setSubject] = useState('');
   const [question, setQuestion] = useState('');
@@ -77,25 +73,7 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
     }
   }
 
-  const tabs = ['QUESTIONS', 'ROOMS', 'STAFF', 'HISTORY'];
 
-  const navItems = [
-    { label: 'Questions', icon: MessageSquare, tab: 'QUESTIONS' },
-    { label: 'Rooms', icon: Grid, tab: 'ROOMS' },
-    { label: 'Staff', icon: Users, tab: 'STAFF' },
-    { label: 'History', icon: History, tab: 'HISTORY' },
-  ];
-
-  const handleTabClick = (tab: string) => {
-    setActiveTab(tab);
-    if (tab === 'ROOMS') {
-      navigate('/');
-    } else if (tab === 'STAFF') {
-      navigate('/staff');
-    } else if (tab === 'HISTORY') {
-      navigate('/staff?tab=HISTORY');
-    }
-  };
 
   const handleSubmit = async () => {
     if (!subject.trim() || !question.trim() || !currentRoomId) return;
@@ -224,23 +202,6 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
           </button>
           <h1 className="text-white text-xl font-bold flex-1">GIBI-GUBAE</h1>
         </div>
-
-        {/* Desktop Top Navigation Tabs */}
-        <nav className="hidden md:flex border-t border-white/20">
-          {tabs.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => handleTabClick(tab)}
-              className={`flex-1 py-3 text-xs font-bold transition-colors cursor-pointer ${
-                activeTab === tab
-                  ? 'text-white border-b-2 border-[#F5A623]'
-                  : 'text-white/60 hover:text-white/90'
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </nav>
       </header>
 
       {/* Room Banner */}
@@ -264,7 +225,7 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
       </section>
 
       {/* Body */}
-      <div className="flex-1 max-w-5xl mx-auto w-full px-4 md:px-10 py-6 pb-24 md:pb-8">
+      <div className="flex-1 max-w-5xl mx-auto w-full px-4 md:px-10 py-6 pb-8">
         <div className="flex gap-6 items-start">
 
           {/* Left — Active Discussions */}
@@ -356,22 +317,7 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
           {renderAskForm()}
         </div>
       </div>
-
-      {/* Bottom Navigation — small screens only */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex z-30">
-        {navItems.map(({ label, icon: Icon, tab }) => (
-          <button
-            key={label}
-            onClick={() => handleTabClick(tab)}
-            className={`flex-1 flex flex-col items-center justify-center py-2.5 gap-0.5 transition-colors cursor-pointer ${
-              activeTab === tab ? 'text-[#2D6DB5]' : 'text-gray-400 hover:text-gray-600'
-            }`}
-          >
-            <Icon size={20} />
-            <span className="text-[10px] font-medium">{label}</span>
-          </button>
-        ))}
-      </nav>
     </div>
   );
 }
+
