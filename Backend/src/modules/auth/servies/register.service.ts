@@ -14,12 +14,12 @@ const resolveRegistrationRole = (
   requestedRole: UserRole | undefined,
   actorRole?: UserRole,
 ): UserRole => {
-  const role = requestedRole ?? UserRole.STUDENT;
+  const role = requestedRole ?? UserRole.TEACHER;
 
   if (!actorRole) {
-    if (role !== UserRole.STUDENT) {
+    if (role !== UserRole.STUDENT && role !== UserRole.TEACHER) {
       throw new ForbiddenError(
-        "Public registration is limited to student accounts",
+        "Public registration is limited to student and teacher accounts",
       );
     }
     return role;

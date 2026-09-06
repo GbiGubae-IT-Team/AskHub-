@@ -7,6 +7,7 @@ const userSelect = {
   role: true,
   email: true,
   isActive: true,
+  staffStatus: true,
   deletedAt: true,
   createdAt: true,
 } satisfies Prisma.UserSelect;

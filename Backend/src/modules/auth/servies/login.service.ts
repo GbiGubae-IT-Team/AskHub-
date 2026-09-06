@@ -4,6 +4,7 @@ import { tokenService } from "../../../core/utils/jwt.js";
 import { authRepository } from "../repositories/auth.repository.js";
 import type { AuthTokensResponse } from "../types/auth.types.js";
 import { authValidationService } from "./validation.service.js";
+import { UserRole, StaffStatus } from "../../../generated/prisma/client.js";
 
 export const loginService = async (body: unknown): Promise<AuthTokensResponse> => {
   const dto = authValidationService.validateLogin(body);
@@ -25,6 +26,19 @@ export const loginService = async (body: unknown): Promise<AuthTokensResponse> =
 
   if (!user.isActive) {
     throw new UnauthorizedError("not approved");
+  }
+
+  if (
+    user.role === UserRole.TEACHER ||
+    user.role === UserRole.ADMIN ||
+    user.role === UserRole.SUPER_ADMIN
+  ) {
+    if (user.staffStatus === StaffStatus.PENDING) {
+      throw new UnauthorizedError("Your staff account is pending admin approval. Please wait to be approved.");
+    }
+    if (user.staffStatus === StaffStatus.SUSPENDED) {
+      throw new UnauthorizedError("Your staff account has been suspended.");
+    }
   }
 
   const tokenPayload = {

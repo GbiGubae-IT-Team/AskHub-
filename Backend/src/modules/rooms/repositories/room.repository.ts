@@ -4,7 +4,11 @@ import prisma from "../../../config/db.js";
 const roomSelect = {
   id: true,
   name: true,
+  description: true,
+  category: true,
   type: true,
+  staffVerified: true,
+  code: true,
   isActive: true,
   createdAt: true,
   createdById: true,
@@ -25,6 +29,16 @@ export const roomRepository = {
       where: {
         id,
         ...(includeInactive ? {} : activeOnly),
+      },
+      select: roomSelect,
+    });
+  },
+
+  async findByCode(code: string) {
+    return prisma.room.findFirst({
+      where: {
+        code,
+        ...activeOnly,
       },
       select: roomSelect,
     });

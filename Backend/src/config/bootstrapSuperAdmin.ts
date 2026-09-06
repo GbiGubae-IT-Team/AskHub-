@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { UserRole } from "../generated/prisma/client.js";
+import { UserRole, StaffStatus } from "../generated/prisma/client.js";
 import { env } from "./env.js";
 import prisma from "./db.js";
 import { passwordService } from "../core/utils/hashPassword.js";
@@ -25,6 +25,7 @@ export const bootstrapSuperAdmin = async () => {
         password: hashedPassword,
         role: UserRole.SUPER_ADMIN,
         isActive: true,
+        staffStatus: StaffStatus.APPROVED,
         deletedAt: null,
       },
     });
@@ -37,6 +38,7 @@ export const bootstrapSuperAdmin = async () => {
       email,
       password: hashedPassword,
       role: UserRole.SUPER_ADMIN,
+      staffStatus: StaffStatus.APPROVED,
       anonymousId: `anon_super_${randomUUID()}`,
     },
   });

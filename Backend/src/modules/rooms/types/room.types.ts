@@ -9,7 +9,11 @@ export type RoomCreatorRecord = {
 export type RoomRecord = {
   id: string;
   name: string;
+  description: string | null;
+  category: string | null;
   type: RoomType;
+  staffVerified: boolean;
+  code: string | null;
   isActive: boolean;
   createdAt: Date;
   createdById: string;
@@ -19,7 +23,11 @@ export type RoomRecord = {
 export interface RoomResponse {
   id: string;
   name: string;
+  description: string | null;
+  category: string | null;
   type: RoomType;
+  staffVerified: boolean;
+  code: string | null;
   isActive: boolean;
   createdAt: Date;
   createdBy: RoomCreatorRecord;
@@ -40,11 +48,23 @@ export interface PaginatedRoomsResponse {
   totalPages: number;
 }
 
-export const toRoomResponse = (room: RoomRecord): RoomResponse => ({
-  id: room.id,
-  name: room.name,
-  type: room.type,
-  isActive: room.isActive,
-  createdAt: room.createdAt,
-  createdBy: room.createdBy,
-});
+import type { JwtPayload } from "../../auth/types/auth.types.js";
+
+export const toRoomResponse = (room: RoomRecord, actor?: JwtPayload): RoomResponse => {
+  const isStaff = actor
+    ? (actor.role === "SUPER_ADMIN" || actor.role === "ADMIN" || actor.role === "TEACHER" || actor.userId === room.createdById)
+    : false;
+
+  return {
+    id: room.id,
+    name: room.name,
+    description: room.description,
+    category: room.category,
+    type: room.type,
+    staffVerified: room.staffVerified,
+    code: isStaff ? room.code : null,
+    isActive: room.isActive,
+    createdAt: room.createdAt,
+    createdBy: room.createdBy,
+  };
+};

@@ -37,7 +37,7 @@ router.delete(
   asyncHandler(deleteRoomController),
 );
 
-router.post("/:id/join", authenticate, asyncHandler(joinRoomController));
+router.post("/:id/join", optionalAuthenticate, asyncHandler(joinRoomController));
 router.delete("/:id/leave", authenticate, asyncHandler(leaveRoomController));
 
 export default router;

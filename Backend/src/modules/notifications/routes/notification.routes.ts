@@ -2,6 +2,7 @@ import { Router } from "express";
 import { asyncHandler } from "../../../core/utils/asyncHandler.js";
 import {
   authenticate,
+  optionalAuthenticate,
   requirePermission,
 } from "../../auth/index.js";
 import {
@@ -17,8 +18,7 @@ const router = Router();
 
 router.get(
   "/",
-  authenticate,
-  requirePermission("notification:read"),
+  optionalAuthenticate,
   asyncHandler(listNotificationsController),
 );
 

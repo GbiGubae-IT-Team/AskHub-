@@ -19,6 +19,18 @@ enum UserRole {
   SUPER_ADMIN
 }
 
+enum StaffStatus {
+  PENDING
+  APPROVED
+  SUSPENDED
+}
+
+enum NotificationTarget {
+  PUBLIC
+  STAFF
+  USER
+}
+
 enum QuestionStatus {
   PENDING      
   APPROVED     // visible to teachers/public
@@ -45,6 +57,7 @@ model User {
   email         String?   @unique
   password      String?
   isActive      Boolean   @default(true)
+  staffStatus   StaffStatus? @default(PENDING)
   deletedAt     DateTime?
 
   createdAt     DateTime  @default(now())
@@ -58,11 +71,12 @@ model User {
   notificationsCreated  Notification[] @relation("NotificationCreator")
   roomsCreated          Room[]         @relation("RoomCreator")
   roomsJoined           Room[]         @relation("RoomMembers")
+  notificationReads     NotificationRead[]
 }
 
 model Question {
   id          String          @id @default(uuid())
-  title       String
+  title       String?
   content     String
   isAnonymous Boolean         @default(true)
   category    String?
@@ -104,6 +118,7 @@ model Room {
   type        RoomType
   category    String?
   staffVerified Boolean @default(false)
+  code        String?   @unique
 
   isActive    Boolean   @default(true)
 
@@ -165,15 +180,28 @@ model Vote {
 }
 
 model Notification {
-  id        String   @id @default(uuid())
-  content   String
-  isRead    Boolean  @default(false)
+  id          String             @id @default(uuid())
+  content     String
+  targetType  NotificationTarget @default(USER)
+  isActive    Boolean            @default(true)
 
-  userId    String
-  user      User     @relation("NotificationRecipient", fields: [userId], references: [id])
+  userId      String?
+  user        User?              @relation("NotificationRecipient", fields: [userId], references: [id])
 
   createdById String?
-  createdBy   User?    @relation("NotificationCreator", fields: [createdById], references: [id])
+  createdBy   User?              @relation("NotificationCreator", fields: [createdById], references: [id])
 
-  createdAt DateTime @default(now())
+  createdAt   DateTime           @default(now())
+  reads       NotificationRead[]
+}
+
+model NotificationRead {
+  id             String       @id @default(uuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id])
+  notificationId String
+  notification   Notification @relation(fields: [notificationId], references: [id])
+  readAt         DateTime     @default(now())
+
+  @@unique([userId, notificationId])
 }

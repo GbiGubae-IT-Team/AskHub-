@@ -1,48 +1,111 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router';
 import { Menu, X, Bell } from 'lucide-react';
 import { SignInModal } from './SignInModal';
 import { NotificationModal } from './NotificationModal';
+import { SuccessModal } from './SuccessModal';
+import { apiFetch, getAuthToken } from '../api';
+import { useEffect } from 'react';
 
 interface HeaderProps {
   onGoToStaff?: () => void;
   onGoToRoom?: () => void;
+  onGoToSignIn?: () => void;
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
 }
 
-export function Header({ onGoToStaff, onGoToRoom }: HeaderProps) {
-  const [activeTab, setActiveTab] = useState('Faith');
+export function Header({ onGoToStaff, onGoToRoom, onGoToSignIn, activeTab: externalTab, onTabChange }: HeaderProps) {
+  const navigate = useNavigate();
+  const [internalTab, setInternalTab] = useState('All');
+  const activeTab = externalTab !== undefined ? externalTab : internalTab;
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
   const [isStaffSignInModalOpen, setIsStaffSignInModalOpen] = useState(false);
   const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
-  const [notifications, setNotifications] = useState([
-    { id: 1, message: 'Your question "How can I trust God?" got answered!', time: '2 minutes ago', read: false },
-    { id: 2, message: 'New room created: "Prayer Warriors"', time: '1 hour ago', read: false },
-    { id: 3, message: 'Your question was marked as helpful', time: '3 hours ago', read: true },
-    { id: 4, message: 'New answer to "Dealing with anxiety"', time: '5 hours ago', read: true }
-  ]);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [questionText, setQuestionText] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
 
-  const tabs = ['Faith', 'Bible', 'Prayer', 'Relationships', 'Struggles', 'General'];
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const res = await apiFetch('/notifications');
+        if (res?.data?.items) {
+          setNotifications(res.data.items.map((n: any) => ({
+            id: n.id,
+            message: n.content,
+            time: new Date(n.createdAt).toLocaleString(),
+            read: n.isRead
+          })));
+        }
+      } catch (e) {
+        console.error('Failed to fetch notifications', e);
+      }
+    };
+    fetchNotifications();
+    // Poll every 30s
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const tabs = ['All', 'Faith', 'Bible', 'Prayer', 'Relationships', 'Struggles', 'General'];
   const unreadCount = notifications.filter(n => !n.read).length;
 
   const handleTabClick = (tab: string) => {
-    setActiveTab(tab);
+    if (onTabChange) onTabChange(tab);
+    else setInternalTab(tab);
     setIsDrawerOpen(false);
     if (tab === 'Rooms') onGoToRoom?.();
   };
 
   const handleStaffSignIn = () => {
     setIsDrawerOpen(false);
-    setIsStaffSignInModalOpen(true);
+    navigate('/signin');
   };
 
-  const handleMarkAsRead = (id: number) => {
-    setNotifications(notifications.map(n =>
-      n.id === id ? { ...n, read: true } : n
-    ));
+  const handleMarkAsRead = async (id: string) => {
+    try {
+      await apiFetch(`/notifications/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ isRead: true })
+      });
+      setNotifications(notifications.map(n =>
+        n.id === id ? { ...n, read: true } : n
+      ));
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const handleMarkAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, read: true })));
+  const handleMarkAllAsRead = async () => {
+    try {
+      await apiFetch(`/notifications/read-all`, { method: 'PATCH' });
+      setNotifications(notifications.map(n => ({ ...n, read: true })));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleAskQuestion = async () => {
+    if (!questionText.trim()) return;
+    
+
+    try {
+      setIsSubmitting(true);
+      await apiFetch('/questions', {
+        method: 'POST',
+        body: JSON.stringify({ content: questionText, isAnonymous: true }),
+      });
+      setQuestionText('');
+      setIsSuccessModalOpen(true);
+    } catch (error: any) {
+      console.error('Failed to submit question:', error);
+      alert(error.message || 'Failed to submit question. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -84,13 +147,17 @@ export function Header({ onGoToStaff, onGoToRoom }: HeaderProps) {
               <input
                 type="text"
                 placeholder="Ask us anything"
+                value={questionText}
+                onChange={(e) => setQuestionText(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAskQuestion()}
                 className="flex-1 px-4 py-2 bg-white rounded text-sm focus:outline-none focus:ring-2 focus:ring-white/50"
               />
               <button
-                onClick={() => setIsSignInModalOpen(true)}
-                className="bg-[#F5A623] hover:bg-[#E09612] text-white font-bold px-6 py-2 rounded transition-colors"
+                onClick={handleAskQuestion}
+                disabled={isSubmitting}
+                className="bg-[#F5A623] hover:bg-[#E09612] text-white font-bold px-6 py-2 rounded transition-colors disabled:opacity-50"
               >
-                GO
+                {isSubmitting ? '...' : 'GO'}
               </button>
               {/* Notification Icon */}
               <button
@@ -106,8 +173,20 @@ export function Header({ onGoToStaff, onGoToRoom }: HeaderProps) {
                 )}
               </button>
               <button
-                onClick={() => setIsStaffSignInModalOpen(true)}
-                className="bg-white/10 hover:bg-white/20 text-white font-medium px-4 py-2 rounded transition-colors text-sm whitespace-nowrap"
+                onClick={() => {
+                  const token = getAuthToken();
+                  if (token) {
+                    try {
+                      const payload = JSON.parse(atob(token.split('.')[1]));
+                      if (['TEACHER', 'ADMIN', 'SUPER_ADMIN'].includes(payload?.role)) {
+                        navigate('/staff');
+                        return;
+                      }
+                    } catch (e) {}
+                  }
+                  navigate('/signin');
+                }}
+                className="bg-white/10 hover:bg-white/20 text-white font-medium px-4 py-2 rounded transition-colors text-sm whitespace-nowrap cursor-pointer"
               >
                 Staff Sign In
               </button>
@@ -119,13 +198,17 @@ export function Header({ onGoToStaff, onGoToRoom }: HeaderProps) {
             <input
               type="text"
               placeholder="Ask us anything"
+              value={questionText}
+              onChange={(e) => setQuestionText(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAskQuestion()}
               className="flex-1 px-4 py-2 bg-white rounded text-sm focus:outline-none focus:ring-2 focus:ring-white/50"
             />
             <button
-              onClick={() => setIsSignInModalOpen(true)}
-              className="bg-[#F5A623] hover:bg-[#E09612] text-white font-bold px-6 py-2 rounded transition-colors"
+              onClick={handleAskQuestion}
+              disabled={isSubmitting}
+              className="bg-[#F5A623] hover:bg-[#E09612] text-white font-bold px-6 py-2 rounded transition-colors disabled:opacity-50"
             >
-              GO
+              {isSubmitting ? '...' : 'GO'}
             </button>
           </div>
         </div>
@@ -136,7 +219,7 @@ export function Header({ onGoToStaff, onGoToRoom }: HeaderProps) {
             {tabs.map((tab) => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab)}
+                onClick={() => handleTabClick(tab)}
                 className={`px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors ${
                   activeTab === tab
                     ? 'text-white border-b-2 border-white'
@@ -227,8 +310,14 @@ export function Header({ onGoToStaff, onGoToRoom }: HeaderProps) {
         isOpen={isNotificationModalOpen}
         onClose={() => setIsNotificationModalOpen(false)}
         notifications={notifications}
-        onMarkAsRead={handleMarkAsRead}
-        onMarkAllAsRead={handleMarkAllAsRead}
+        onMarkAsRead={getAuthToken() ? handleMarkAsRead : undefined}
+        onMarkAllAsRead={getAuthToken() ? handleMarkAllAsRead : undefined}
+      />
+
+      {/* Success Modal */}
+      <SuccessModal 
+        isOpen={isSuccessModalOpen} 
+        onClose={() => setIsSuccessModalOpen(false)} 
       />
     </>
   );

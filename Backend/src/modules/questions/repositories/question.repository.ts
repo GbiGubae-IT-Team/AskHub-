@@ -3,8 +3,10 @@ import prisma from "../../../config/db.js";
 
 const questionSelect = {
   id: true,
+  title: true,
   content: true,
   isAnonymous: true,
+  category: true,
   status: true,
   createdAt: true,
   updatedAt: true,
@@ -27,14 +29,33 @@ const questionSelect = {
       },
     },
   },
+  answers: {
+    select: {
+      id: true,
+      content: true,
+      createdAt: true,
+      author: {
+        select: {
+          id: true,
+          anonymousId: true,
+          role: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+  },
 } satisfies Prisma.QuestionSelect;
 
 const mapQuestion = (
   row: Prisma.QuestionGetPayload<{ select: typeof questionSelect }>,
 ) => ({
   id: row.id,
+  title: row.title,
   content: row.content,
   isAnonymous: row.isAnonymous,
+  category: row.category,
   status: row.status,
   createdAt: row.createdAt,
   updatedAt: row.updatedAt,
@@ -42,6 +63,7 @@ const mapQuestion = (
   roomId: row.roomId,
   author: row.author,
   tags: row.tags.map((t) => t.tag),
+  answers: row.answers,
 });
 
 export const questionRepository = {
@@ -75,6 +97,7 @@ export const questionRepository = {
   },
 
   async create(data: {
+    title?: string;
     content: string;
     isAnonymous: boolean;
     authorId: string;
@@ -83,6 +106,7 @@ export const questionRepository = {
   }) {
     const row = await prisma.question.create({
       data: {
+        ...(data.title !== undefined && { title: data.title }),
         content: data.content,
         isAnonymous: data.isAnonymous,
         author: { connect: { id: data.authorId } },
@@ -157,7 +181,7 @@ export const buildListWhere = (params: {
   actorUserId?: string;
   canModerate: boolean;
   status?: QuestionStatus;
-  roomId?: string;
+  roomId?: string | null;
   mine?: boolean;
 }): Prisma.QuestionWhereInput => {
   const { actorUserId, canModerate, status, roomId, mine } = params;
@@ -178,9 +202,11 @@ export const buildListWhere = (params: {
     };
   }
 
-  if (actorUserId) {
-    const publicStatuses: QuestionStatus[] = ["APPROVED", "ANSWERED"];
+  const publicStatuses: QuestionStatus[] = (roomId !== undefined && roomId !== null)
+    ? ["APPROVED", "ANSWERED", "PENDING"]
+    : ["APPROVED", "ANSWERED"];
 
+  if (actorUserId) {
     if (status !== undefined) {
       const orConditions: Prisma.QuestionWhereInput[] = [
         { authorId: actorUserId, status },
@@ -205,8 +231,24 @@ export const buildListWhere = (params: {
     };
   }
 
+  // Unauthenticated / public access:
+  // Return publicStatuses questions (which includes PENDING inside rooms) without requiring user authentication!
+  if (status !== undefined) {
+    if (publicStatuses.includes(status)) {
+      return {
+        status,
+        ...(roomId !== undefined && { roomId }),
+      };
+    }
+    // If an unauthenticated visitor tries to request an unavailable status, deny by returning empty
+    return {
+      status: { in: [] },
+      ...(roomId !== undefined && { roomId }),
+    };
+  }
+
   return {
-    status: status ?? { in: ["APPROVED", "ANSWERED"] as QuestionStatus[] },
+    status: { in: publicStatuses },
     ...(roomId !== undefined && { roomId }),
   };
 };

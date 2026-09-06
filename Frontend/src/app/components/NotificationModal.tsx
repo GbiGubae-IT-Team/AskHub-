@@ -1,7 +1,7 @@
 import { X } from 'lucide-react';
 
 interface Notification {
-  id: number;
+  id: string;
   message: string;
   time: string;
   read: boolean;
@@ -11,8 +11,8 @@ interface NotificationModalProps {
   isOpen: boolean;
   onClose: () => void;
   notifications: Notification[];
-  onMarkAsRead: (id: number) => void;
-  onMarkAllAsRead: () => void;
+  onMarkAsRead?: (id: string) => void;
+  onMarkAllAsRead?: () => void;
 }
 
 export function NotificationModal({
@@ -23,6 +23,8 @@ export function NotificationModal({
   onMarkAllAsRead
 }: NotificationModalProps) {
   if (!isOpen) return null;
+
+  const isGuest = !onMarkAsRead;
 
   return (
     <>
@@ -38,7 +40,7 @@ export function NotificationModal({
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <h2 className="font-bold text-lg">Notifications</h2>
           <div className="flex items-center gap-2">
-            {notifications.some(n => !n.read) && (
+            {!isGuest && notifications.some(n => !n.read) && (
               <button
                 onClick={onMarkAllAsRead}
                 className="text-xs text-[#2D6DB5] hover:underline"
@@ -56,6 +58,15 @@ export function NotificationModal({
           </div>
         </div>
 
+        {/* Guest notice */}
+        {isGuest && notifications.length > 0 && (
+          <div className="px-4 py-2 bg-amber-50 border-b border-amber-100">
+            <p className="text-xs text-amber-700">
+              Sign in to track which announcements you've read.
+            </p>
+          </div>
+        )}
+
         {/* Notifications List */}
         <div className="flex-1 overflow-y-auto">
           {notifications.length === 0 ? (
@@ -67,10 +78,11 @@ export function NotificationModal({
               {notifications.map((notification) => (
                 <button
                   key={notification.id}
-                  onClick={() => onMarkAsRead(notification.id)}
-                  className={`w-full text-left p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors ${
+                  onClick={() => onMarkAsRead?.(notification.id)}
+                  disabled={isGuest}
+                  className={`w-full text-left p-4 border-b border-gray-100 transition-colors ${
                     !notification.read ? 'bg-blue-50' : ''
-                  }`}
+                  } ${!isGuest ? 'hover:bg-gray-50 cursor-pointer' : 'cursor-default'}`}
                 >
                   <div className="flex items-start gap-3">
                     {!notification.read && (
