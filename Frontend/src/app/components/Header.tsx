@@ -10,11 +10,14 @@ interface HeaderProps {
   onGoToStaff?: () => void;
   onGoToRoom?: () => void;
   onGoToSignIn?: () => void;
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
 }
 
-export function Header({ onGoToStaff, onGoToRoom, onGoToSignIn }: HeaderProps) {
+export function Header({ onGoToStaff, onGoToRoom, onGoToSignIn, activeTab: externalTab, onTabChange }: HeaderProps) {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('Faith');
+  const [internalTab, setInternalTab] = useState('All');
+  const activeTab = externalTab !== undefined ? externalTab : internalTab;
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
   const [isStaffSignInModalOpen, setIsStaffSignInModalOpen] = useState(false);
@@ -29,11 +32,12 @@ export function Header({ onGoToStaff, onGoToRoom, onGoToSignIn }: HeaderProps) {
     { id: 4, message: 'New answer to "Dealing with anxiety"', time: '5 hours ago', read: true }
   ]);
 
-  const tabs = ['Faith', 'Bible', 'Prayer', 'Relationships', 'Struggles', 'General'];
+  const tabs = ['All', 'Faith', 'Bible', 'Prayer', 'Relationships', 'Struggles', 'General'];
   const unreadCount = notifications.filter(n => !n.read).length;
 
   const handleTabClick = (tab: string) => {
-    setActiveTab(tab);
+    if (onTabChange) onTabChange(tab);
+    else setInternalTab(tab);
     setIsDrawerOpen(false);
     if (tab === 'Rooms') onGoToRoom?.();
   };
@@ -189,7 +193,7 @@ export function Header({ onGoToStaff, onGoToRoom, onGoToSignIn }: HeaderProps) {
             {tabs.map((tab) => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab)}
+                onClick={() => handleTabClick(tab)}
                 className={`px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors ${
                   activeTab === tab
                     ? 'text-white border-b-2 border-white'

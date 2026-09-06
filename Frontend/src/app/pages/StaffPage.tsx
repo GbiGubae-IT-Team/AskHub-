@@ -170,6 +170,21 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
     }
   };
 
+  const handleCategoryChange = async (id: string, newCategory: string) => {
+    // Optimistic UI update
+    setQuestions((qs) => qs.map((q) => (q.id === id ? { ...q, category: newCategory } : q)));
+    try {
+      await apiFetch(`/questions/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ category: newCategory }),
+      });
+    } catch (err) {
+      console.error("Failed to update category:", err);
+      // Rollback
+      fetchQuestions();
+    }
+  };
+
   const handleSubmitAnswer = async (id: string) => {
     const q = questions.find((x) => x.id === id);
     if (!q || !(q.answer || '').trim()) return;
@@ -437,6 +452,25 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
                               );
                             })}
                           </div>
+                        </div>
+
+                        {/* Category Moderation Controls */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mt-3 pt-3 border-t border-gray-200">
+                          <span className="text-xs font-semibold text-gray-700">
+                            Set Category:
+                          </span>
+                          <select
+                            value={question.category?.toUpperCase() || 'GENERAL'}
+                            onChange={(e) => handleCategoryChange(question.id, e.target.value)}
+                            className="px-2 py-1 text-xs font-semibold border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:border-[#2D6DB5] focus:ring-1 focus:ring-[#2D6DB5] cursor-pointer"
+                          >
+                            <option value="FAITH">FAITH</option>
+                            <option value="BIBLE">BIBLE</option>
+                            <option value="PRAYER">PRAYER</option>
+                            <option value="RELATIONSHIPS">RELATIONSHIPS</option>
+                            <option value="STRUGGLES">STRUGGLES</option>
+                            <option value="GENERAL">GENERAL</option>
+                          </select>
                         </div>
                       </div>
 

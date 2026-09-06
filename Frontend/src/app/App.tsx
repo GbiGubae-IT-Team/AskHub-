@@ -13,6 +13,7 @@ import { apiFetch, getAuthToken, getCurrentUser, removeAuthToken } from './api';
 
 function HomePage() {
   const navigate = useNavigate();
+  const [activeCategory, setActiveCategory] = useState('All');
   const [joinedRoomIds, setJoinedRoomIds] = useState<Set<string | number>>(new Set());
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -62,6 +63,8 @@ function HomePage() {
       <Header
         onGoToStaff={() => navigate('/staff')}
         onGoToSignIn={() => navigate('/signin')}
+        activeTab={activeCategory}
+        onTabChange={setActiveCategory}
       />
 
       {/* Scripture banner */}
@@ -80,7 +83,12 @@ function HomePage() {
           {/* Center Content - Question Cards */}
           <div className="flex-1 min-w-0">
             {questions
-              ?.filter((q) => q.status === "APPROVED" || q.status === "ANSWERED")
+              ?.filter((q) => {
+                const isApproved = q.status === "APPROVED" || q.status === "ANSWERED";
+                if (!isApproved) return false;
+                if (activeCategory === 'All') return true;
+                return q.category?.toLowerCase() === activeCategory.toLowerCase();
+              })
               .map((question) => (
                 <QuestionCard
                   key={question.id}
