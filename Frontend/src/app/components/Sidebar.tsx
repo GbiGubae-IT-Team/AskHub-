@@ -17,7 +17,7 @@ export function Sidebar() {
   const fullText = allLines.join('\n\n');
 
   return (
-    <aside className="hidden lg:block w-72 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden sticky top-4 h-fit transition-all duration-300 hover:shadow-md">
+    <aside className="block w-full lg:w-72 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden lg:sticky top-4 h-fit transition-all duration-300 hover:shadow-md">
       {/* Date Header */}
       <div className="bg-[#1a4f8a] text-white px-4 py-3 flex items-center justify-center gap-2">
         <Calendar size={18} className="text-[#F5A623]" />

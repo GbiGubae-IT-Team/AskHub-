@@ -77,7 +77,7 @@ function HomePage() {
       </div>
 
       <main className="flex-1 max-w-[1600px] mx-auto w-full px-4 py-6">
-        <div className="flex gap-6">
+        <div className="flex flex-col lg:flex-row gap-6">
           {/* Left Sidebar */}
           <Sidebar />
 
