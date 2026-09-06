@@ -3,8 +3,10 @@ import prisma from "../../../config/db.js";
 
 const questionSelect = {
   id: true,
+  title: true,
   content: true,
   isAnonymous: true,
+  category: true,
   status: true,
   createdAt: true,
   updatedAt: true,
@@ -50,8 +52,10 @@ const mapQuestion = (
   row: Prisma.QuestionGetPayload<{ select: typeof questionSelect }>,
 ) => ({
   id: row.id,
+  title: row.title,
   content: row.content,
   isAnonymous: row.isAnonymous,
+  category: row.category,
   status: row.status,
   createdAt: row.createdAt,
   updatedAt: row.updatedAt,
@@ -198,9 +202,9 @@ export const buildListWhere = (params: {
     };
   }
 
-  if (actorUserId) {
-    const publicStatuses: QuestionStatus[] = ["APPROVED", "ANSWERED"];
+  const publicStatuses: QuestionStatus[] = ["APPROVED", "ANSWERED"];
 
+  if (actorUserId) {
     if (status !== undefined) {
       const orConditions: Prisma.QuestionWhereInput[] = [
         { authorId: actorUserId, status },
@@ -225,8 +229,24 @@ export const buildListWhere = (params: {
     };
   }
 
+  // Unauthenticated / public access:
+  // ONLY return APPROVED or ANSWERED questions without requiring any user authentication!
+  if (status !== undefined) {
+    if (publicStatuses.includes(status)) {
+      return {
+        status,
+        ...(roomId !== undefined && { roomId }),
+      };
+    }
+    // If an unauthenticated visitor tries to request PENDING or REJECTED, deny by returning empty
+    return {
+      status: { in: [] },
+      ...(roomId !== undefined && { roomId }),
+    };
+  }
+
   return {
-    status: status ?? { in: ["APPROVED", "ANSWERED"] as QuestionStatus[] },
+    status: { in: publicStatuses },
     ...(roomId !== undefined && { roomId }),
   };
 };

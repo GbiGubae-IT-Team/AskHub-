@@ -9,7 +9,10 @@ export function HotQuestions() {
     apiFetch('/questions')
       .then(res => {
         if (res?.data?.items) {
-          setHotQuestions(res.data.items.slice(0, 5));
+          const publicQuestions = res.data.items.filter(
+            (q: any) => q.status === "APPROVED" || q.status === "ANSWERED"
+          );
+          setHotQuestions(publicQuestions.slice(0, 5));
         }
       })
       .catch(console.error)

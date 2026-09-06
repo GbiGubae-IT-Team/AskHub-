@@ -17,8 +17,10 @@ export type QuestionTagRecord = {
 
 export type QuestionRecord = {
   id: string;
+  title: string | null;
   content: string;
   isAnonymous: boolean;
+  category: string | null;
   status: QuestionStatus;
   createdAt: Date;
   updatedAt: Date;
@@ -42,8 +44,10 @@ export interface QuestionAuthorResponse {
 
 export interface QuestionResponse {
   id: string;
+  title: string | null;
   content: string;
   isAnonymous: boolean;
+  category: string | null;
   status: QuestionStatus;
   createdAt: Date;
   updatedAt: Date;
@@ -96,8 +100,10 @@ export const toQuestionResponse = (
 
   return {
     id: question.id,
+    title: question.title,
     content: question.content,
     isAnonymous: question.isAnonymous,
+    category: question.category,
     status: question.status,
     createdAt: question.createdAt,
     updatedAt: question.updatedAt,

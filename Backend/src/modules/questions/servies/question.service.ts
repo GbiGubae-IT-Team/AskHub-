@@ -236,6 +236,8 @@ export const updateQuestionService = async (
   }
 
   let question = await questionRepository.update(id, {
+    ...(dto.title !== undefined && { title: dto.title }),
+    ...(dto.category !== undefined && { category: dto.category }),
     ...(dto.content !== undefined && { content: dto.content }),
     ...(dto.isAnonymous !== undefined && { isAnonymous: dto.isAnonymous }),
     ...(dto.status !== undefined && { status: dto.status }),

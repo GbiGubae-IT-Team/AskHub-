@@ -73,16 +73,19 @@ export default function App() {
 
           {/* Center Content - Question Cards */}
           <div className="flex-1 min-w-0">
-            {questions?.map((question) => (
-              <QuestionCard
-                key={question.id}
-                category={question.category}
-                title={question.title}
-                preview={question.content}
-                isAnswered={question.status === "ANSWERED"}
-                answers={question.answers}
-              />
-            ))}
+            {questions
+              ?.filter((q) => q.status === "APPROVED" || q.status === "ANSWERED")
+              .map((question) => (
+                <QuestionCard
+                  key={question.id}
+                  category={question.category}
+                  title={question.title}
+                  preview={question.content}
+                  status={question.status}
+                  isAnswered={question.status === "ANSWERED"}
+                  answers={question.answers}
+                />
+              ))}
           </div>
 
           {/* Right Sidebar - Hot Questions */}

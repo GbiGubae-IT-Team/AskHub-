@@ -6,10 +6,11 @@ interface QuestionCardProps {
   title: string;
   preview: string;
   isAnswered: boolean;
+  status?: "PENDING" | "APPROVED" | "REJECTED" | "ANSWERED";
   answers?: { content: string; createdAt: string }[];
 }
 
-export function QuestionCard({ category, title, preview, isAnswered, answers }: QuestionCardProps) {
+export function QuestionCard({ category, title, preview, isAnswered, status, answers }: QuestionCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showAnswer, setShowAnswer] = useState(false);
   const TEXT_LIMIT = 150;
@@ -19,14 +20,41 @@ export function QuestionCard({ category, title, preview, isAnswered, answers }: 
   const displayText = (isExpanded || !isLongText) ? safePreview : safePreview.slice(0, TEXT_LIMIT).trim() + '...';
   const hasAnswers = Boolean(answers && answers.length > 0);
 
+  const getStatusBadge = () => {
+    const effectiveStatus = status || (isAnswered ? "ANSWERED" : "PENDING");
+    switch (effectiveStatus) {
+      case "ANSWERED":
+        return {
+          label: "Answered",
+          classes: "bg-emerald-50 text-emerald-700 border border-emerald-200/60"
+        };
+      case "APPROVED":
+        return {
+          label: "Approved",
+          classes: "bg-blue-50 text-blue-700 border border-blue-200/60"
+        };
+      case "REJECTED":
+        return {
+          label: "Rejected",
+          classes: "bg-rose-50 text-rose-700 border border-rose-200/60"
+        };
+      case "PENDING":
+      default:
+        return {
+          label: "Pending",
+          classes: "bg-amber-50 text-amber-700 border border-amber-200/60"
+        };
+    }
+  };
+
+  const statusBadge = getStatusBadge();
+
   return (
     <div className="bg-white rounded-xl shadow-xs border border-gray-100 p-6 mb-4 hover:shadow-md transition-all duration-200">
       {/* Category & Status Header */}
       <div className="flex items-center gap-2 mb-2">
-        <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-          isAnswered ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' : 'bg-gray-100 text-gray-700'
-        }`}>
-          {isAnswered ? 'Answered' : 'Pending'}
+        <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${statusBadge.classes}`}>
+          {statusBadge.label}
         </span>
         {category && category.trim().length > 0 && (
           <span className="text-sm font-medium text-gray-500">· {category}</span>
