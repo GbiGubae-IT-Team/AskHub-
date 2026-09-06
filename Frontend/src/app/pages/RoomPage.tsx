@@ -225,7 +225,7 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
       </section>
 
       {/* Body */}
-      <div className="flex-1 max-w-5xl mx-auto w-full px-4 md:px-10 py-6 pb-8">
+      <div className="flex-1 max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 pb-8">
         <div className="flex gap-6 items-start">
 
           {/* Left — Active Discussions */}
