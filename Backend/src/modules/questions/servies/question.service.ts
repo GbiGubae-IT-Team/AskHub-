@@ -72,9 +72,7 @@ export const createQuestionService = async (
 
   const dto = questionValidationService.validateCreate(body);
 
-  if (!actor && !dto.roomId) {
-    throw new ForbiddenError("Authentication is required to ask public questions");
-  }
+
 
   if (dto.roomId) {
     const room = await questionRepository.findActiveRoom(dto.roomId);

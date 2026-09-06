@@ -94,11 +94,6 @@ export function Header({ onGoToStaff, onGoToRoom, onGoToSignIn, activeTab: exter
   const handleAskQuestion = async () => {
     if (!questionText.trim()) return;
     
-    const token = getAuthToken();
-    if (!token) {
-      navigate('/signin');
-      return;
-    }
 
     try {
       setIsSubmitting(true);
