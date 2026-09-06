@@ -559,28 +559,28 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
                 </button>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {rooms.map((room) => (
                   <div
                     key={room.id}
-                    className="bg-white border border-gray-300 rounded-none p-4 sm:p-5 hover:border-gray-400 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+                    className="bg-white border border-gray-300 rounded-none px-4 py-2.5 sm:px-5 sm:py-3 hover:border-gray-400 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-3"
                   >
                     {/* Left Details Section */}
-                    <div className="flex-1 min-w-0 pr-0 lg:pr-6">
+                    <div className="flex-1 min-w-0 pr-0 lg:pr-4">
                       {/* Meta badges row */}
-                      <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                      <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
                         {room.category && (
-                          <span className="bg-blue-50 text-blue-700 border border-blue-200 text-[11px] font-semibold px-2.5 py-0.5 rounded-none">
+                          <span className="bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-semibold px-2 py-0.2 rounded-none">
                             {room.category}
                           </span>
                         )}
                         {room.staffVerified && (
-                          <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-semibold px-2 py-0.5 rounded-none flex items-center gap-1">
-                            <ShieldCheck size={11} /> Verified
+                          <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-semibold px-2 py-0.2 rounded-none flex items-center gap-1">
+                            <ShieldCheck size={10} /> Verified
                           </span>
                         )}
                         <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded-none border ${
+                          className={`text-[9px] font-bold px-1.5 py-0.2 rounded-none border ${
                             room.isActive
                               ? 'bg-green-50 border-green-200 text-green-700'
                               : 'bg-gray-50 border-gray-200 text-gray-500'
@@ -589,34 +589,34 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
                           {room.isActive ? 'ACTIVE' : 'INACTIVE'}
                         </span>
                         {room.createdAt && (
-                          <span className="text-[11px] text-gray-400 ml-1">
+                          <span className="text-[10px] text-gray-400 ml-1">
                             Created {new Date(room.createdAt).toLocaleDateString()}
                           </span>
                         )}
                       </div>
 
                       {/* Room Title */}
-                      <h3 className="font-bold text-gray-900 text-base sm:text-lg leading-snug">
+                      <h3 className="font-bold text-gray-900 text-sm sm:text-base leading-snug">
                         {room.name}
                       </h3>
 
                       {/* Description */}
-                      <p className="text-xs sm:text-sm text-gray-600 leading-relaxed mt-1 max-w-4xl line-clamp-2">
+                      <p className="text-xs text-gray-500 leading-normal mt-0.5 max-w-4xl line-clamp-1">
                         {room.description || 'No description provided.'}
                       </p>
                     </div>
 
                     {/* Right Horizontal Key & Action Section */}
-                    <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 pt-3 lg:pt-0 border-t lg:border-t-0 border-gray-100 flex-shrink-0">
-                      {/* 6-Digit Room Key Box - Sharp border & No shadow */}
-                      <div className="bg-amber-50/90 border border-amber-300 rounded-none px-3.5 py-2 flex items-center gap-3">
-                        <div className="flex items-center gap-2">
-                          <KeyRound size={15} className="text-[#E07B2A]" />
+                    <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 pt-2 lg:pt-0 border-t lg:border-t-0 border-gray-100 flex-shrink-0">
+                      {/* 6-Digit Room Key Box - Compact & Sharp */}
+                      <div className="bg-amber-50/90 border border-amber-300 rounded-none px-2.5 py-1 sm:px-3 sm:py-1.5 flex items-center gap-2.5">
+                        <div className="flex items-center gap-1.5">
+                          <KeyRound size={13} className="text-[#E07B2A]" />
                           <div>
-                            <span className="text-[10px] uppercase font-bold tracking-wider text-amber-800 block leading-none mb-1">
+                            <span className="text-[9px] uppercase font-bold tracking-wider text-amber-800 block leading-none mb-0.5">
                               Room Key
                             </span>
-                            <span className="text-base font-mono font-bold tracking-widest text-gray-900 leading-none">
+                            <span className="text-sm font-mono font-bold tracking-wider text-gray-900 leading-none">
                               {room.code || '------'}
                             </span>
                           </div>
@@ -625,31 +625,31 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
                         <button
                           type="button"
                           onClick={() => handleCopyKey(room.code)}
-                          className="px-2.5 py-1.5 bg-white hover:bg-amber-100 text-amber-900 text-xs font-bold border border-amber-300 rounded-none transition-colors flex items-center gap-1 cursor-pointer"
+                          className="px-2 py-1 bg-white hover:bg-amber-100 text-amber-900 text-[11px] font-bold border border-amber-300 rounded-none transition-colors flex items-center gap-1 cursor-pointer"
                           title="Copy 6-digit key to share with attendees"
                         >
                           {copiedCode === room.code ? (
                             <>
-                              <Check size={12} className="text-emerald-600" />
+                              <Check size={11} className="text-emerald-600" />
                               <span className="text-emerald-700">Copied!</span>
                             </>
                           ) : (
                             <>
-                              <Copy size={12} />
+                              <Copy size={11} />
                               <span>Copy Key</span>
                             </>
                           )}
                         </button>
                       </div>
 
-                      {/* Enter Room Button - Sharp border & No shadow */}
+                      {/* Enter Room Button - Compact & Sharp */}
                       <button
                         type="button"
                         onClick={() => onGoToRoom?.(room)}
-                        className="px-4 py-2.5 bg-[#2D6DB5] hover:bg-[#245A94] text-white text-xs font-bold rounded-none transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+                        className="px-3.5 py-1.5 bg-[#2D6DB5] hover:bg-[#245A94] text-white text-xs font-bold rounded-none transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
                       >
                         <span>Enter Room</span>
-                        <ExternalLink size={13} />
+                        <ExternalLink size={12} />
                       </button>
                     </div>
                   </div>
