@@ -30,9 +30,6 @@ export function Header({ onGoToStaff, onGoToRoom, onGoToSignIn, activeTab: exter
 
   useEffect(() => {
     const fetchNotifications = async () => {
-      const token = getAuthToken();
-      if (!token) return;
-
       try {
         const res = await apiFetch('/notifications');
         if (res?.data?.items) {
@@ -48,7 +45,7 @@ export function Header({ onGoToStaff, onGoToRoom, onGoToSignIn, activeTab: exter
       }
     };
     fetchNotifications();
-    // Optional: poll every 30s
+    // Poll every 30s
     const interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -313,8 +310,8 @@ export function Header({ onGoToStaff, onGoToRoom, onGoToSignIn, activeTab: exter
         isOpen={isNotificationModalOpen}
         onClose={() => setIsNotificationModalOpen(false)}
         notifications={notifications}
-        onMarkAsRead={handleMarkAsRead}
-        onMarkAllAsRead={handleMarkAllAsRead}
+        onMarkAsRead={getAuthToken() ? handleMarkAsRead : undefined}
+        onMarkAllAsRead={getAuthToken() ? handleMarkAllAsRead : undefined}
       />
 
       {/* Success Modal */}

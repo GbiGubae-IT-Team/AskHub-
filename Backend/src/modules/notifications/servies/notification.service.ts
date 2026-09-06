@@ -153,7 +153,7 @@ export const createNotificationService = async (
 
   const notification = await notificationRepository.create({
     content: dto.content,
-    targetType: dto.userId ? NotificationTarget.USER : NotificationTarget.PUBLIC,
+    targetType: dto.targetType,
     userId: dto.userId,
     createdById: actor.userId,
   }, actor.userId);
@@ -163,8 +163,36 @@ export const createNotificationService = async (
 
 export const listNotificationsService = async (
   query: unknown,
-  actor: JwtPayload,
+  actor: JwtPayload | undefined,
 ): Promise<PaginatedNotificationsResponse> => {
+  // Guest users (unauthenticated) can only see active PUBLIC notifications
+  if (!actor) {
+    const { page, limit } = notificationValidationService.validateListQuery(query);
+    const skip = (page - 1) * limit;
+
+    const guestWhere = {
+      targetType: NotificationTarget.PUBLIC,
+      isActive: true,
+    };
+
+    const { items, total } = await notificationRepository.findMany({
+      where: guestWhere,
+      unreadWhere: guestWhere,
+      skip,
+      take: limit,
+      actorId: 'guest',
+    });
+
+    return {
+      items: items.map(toNotificationResponse),
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit) || 1,
+      unreadCount: 0,
+    };
+  }
+
   if (!canRead(actor.role)) {
     throw new ForbiddenError(
       "You do not have permission to read notifications",
@@ -179,11 +207,18 @@ export const listNotificationsService = async (
 
   const { where, unreadWhere } = buildListFilters(actor, effectiveScope);
 
+  // Super admins fetching "all" can see inactive notifications too;
+  // regular staff only see active ones
+  const isActiveFilter = canCreate(actor.role) && effectiveScope === 'all'
+    ? {} // super admins see everything in "all" scope
+    : { isActive: true };
+
   const { items, total, unreadCount } = await notificationRepository.findMany({
     where: {
       ...where,
+      ...isActiveFilter,
     },
-    unreadWhere,
+    unreadWhere: { ...unreadWhere, isActive: true },
     skip,
     take: limit,
     actorId: actor.userId
@@ -260,6 +295,10 @@ export const updateNotificationService = async (
     throw new ForbiddenError("Only admins can edit notification content");
   }
 
+  if ((dto.isActive !== undefined || dto.targetType !== undefined) && !actorCanManage) {
+    throw new ForbiddenError("Only admins can change notification visibility or target");
+  }
+
   if (dto.isRead !== undefined && !isRecipient && !isCreator) {
     throw new ForbiddenError(
       "You can only update read status on your own notifications",
@@ -267,9 +306,17 @@ export const updateNotificationService = async (
   }
 
   let notification = existing;
-  if (dto.content !== undefined) {
-    notification = await notificationRepository.update(id, { content: dto.content }, actor.userId);
+
+  // Build update payload for content/isActive/targetType (admin fields)
+  const adminUpdate: Record<string, unknown> = {};
+  if (dto.content !== undefined) adminUpdate.content = dto.content;
+  if (dto.isActive !== undefined) adminUpdate.isActive = dto.isActive;
+  if (dto.targetType !== undefined) adminUpdate.targetType = dto.targetType;
+
+  if (Object.keys(adminUpdate).length > 0) {
+    notification = await notificationRepository.update(id, adminUpdate, actor.userId);
   }
+
   if (dto.isRead === true) {
     notification = (await notificationRepository.markAsRead(id, actor.userId)) || notification;
   }

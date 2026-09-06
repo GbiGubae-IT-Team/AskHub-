@@ -7,6 +7,7 @@ import { QuestionCard } from './components/QuestionCard';
 import { HotQuestions } from './components/HotQuestions';
 import { StaffPage } from './pages/StaffPage';
 import { SuperAdminPage } from './pages/SuperAdminPage';
+import { ManageNotificationsPage } from './pages/ManageNotificationsPage';
 import { RoomPage } from './pages/RoomPage';
 import { AuthPage } from './pages/AuthPage';
 import { JoinRoomsModal, Room } from './components/JoinRoomsModal';
@@ -258,6 +259,14 @@ export default function App() {
         element={
           <ProtectedSuperAdminRoute>
             <SuperAdminPage onBack={() => navigate('/')} />
+          </ProtectedSuperAdminRoute>
+        }
+      />
+      <Route
+        path="/superadmin/notifications"
+        element={
+          <ProtectedSuperAdminRoute>
+            <ManageNotificationsPage onBack={() => navigate('/superadmin')} />
           </ProtectedSuperAdminRoute>
         }
       />

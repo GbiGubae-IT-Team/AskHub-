@@ -6,6 +6,7 @@ import {
   ShieldAlert,
   Users,
   LogOut,
+  Bell,
 } from 'lucide-react';
 import { apiFetch, removeAuthToken } from '../api';
 
@@ -28,6 +29,8 @@ export function SuperAdminPage({ onBack }: SuperAdminPageProps) {
   const [users, setUsers] = useState<UserResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdatingId, setIsUpdatingId] = useState<string | null>(null);
+
+
 
   const handleBack = () => {
     if (onBack) onBack();
@@ -75,6 +78,7 @@ export function SuperAdminPage({ onBack }: SuperAdminPageProps) {
     }
   };
 
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
@@ -119,6 +123,25 @@ export function SuperAdminPage({ onBack }: SuperAdminPageProps) {
             className="px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg shadow-sm transition-colors cursor-pointer"
           >
             Refresh List
+          </button>
+        </div>
+
+        {/* Manage Notifications Card */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-[#2D6DB5]">
+              <Bell size={20} />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900">Notification Center</h3>
+              <p className="text-sm text-gray-500">Push, edit, and manage all notifications sent to staff or the public.</p>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate('/superadmin/notifications')}
+            className="flex-shrink-0 px-5 py-2 bg-[#2D6DB5] hover:bg-[#245A94] text-white text-sm font-medium rounded-lg transition-colors cursor-pointer"
+          >
+            Manage Notifications →
           </button>
         </div>
 

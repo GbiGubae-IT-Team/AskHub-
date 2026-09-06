@@ -1,4 +1,7 @@
+import { NotificationTarget } from "../../../generated/prisma/client.js";
+
 export interface CreateNotificationDto {
   content: string;
-  userId: string;
+  targetType: NotificationTarget;
+  userId?: string;
 }

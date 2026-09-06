@@ -5,10 +5,11 @@ const getNotificationSelect = (actorId: string) => ({
   id: true,
   content: true,
   targetType: true,
+  isActive: true,
   userId: true,
   createdById: true,
   createdAt: true,
-  reads: {
+  reads: actorId === 'guest' ? false : {
     where: { userId: actorId },
     select: { id: true },
   },
@@ -22,10 +23,11 @@ const mapNotification = (raw: RawNotification) => ({
   id: raw.id,
   content: raw.content,
   targetType: raw.targetType,
+  isActive: raw.isActive,
   userId: raw.userId,
   createdById: raw.createdById,
   createdAt: raw.createdAt,
-  isRead: raw.reads.length > 0,
+  isRead: Array.isArray(raw.reads) ? raw.reads.length > 0 : false,
 });
 
 export const notificationRepository = {
@@ -55,9 +57,12 @@ export const notificationRepository = {
         orderBy: { createdAt: "desc" },
       }),
       prisma.notification.count({ where }),
-      prisma.notification.count({
-        where: { ...unreadWhere, reads: { none: { userId: actorId } } },
-      }),
+      // Guests have no DB records, skip the reads-based count
+      actorId === 'guest'
+        ? Promise.resolve(0)
+        : prisma.notification.count({
+            where: { ...unreadWhere, reads: { none: { userId: actorId } } },
+          }),
     ]);
 
     return {
