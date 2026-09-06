@@ -30,13 +30,28 @@ export const createRoomService = async (
 
   const dto = roomValidationService.validateCreate(body);
 
+  const generateRoomCode = async (): Promise<string> => {
+    for (let i = 0; i < 10; i++) {
+      const c = Math.floor(100000 + Math.random() * 900000).toString();
+      const existing = await roomRepository.findByCode(c);
+      if (!existing) return c;
+    }
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  };
+
+  const code = await generateRoomCode();
+
   const room = await roomRepository.create({
     name: dto.name,
     type: dto.type,
+    ...(dto.description !== undefined && { description: dto.description }),
+    ...(dto.category !== undefined && { category: dto.category }),
+    ...(dto.staffVerified !== undefined && { staffVerified: dto.staffVerified }),
+    code,
     createdBy: { connect: { id: actor.userId } },
   });
 
-  return toRoomResponse(room);
+  return toRoomResponse(room, actor);
 };
 
 export const listRoomsService = async (
@@ -60,7 +75,7 @@ export const listRoomsService = async (
   });
 
   return {
-    items: items.map(toRoomResponse),
+    items: items.map(r => toRoomResponse(r, actor)),
     total,
     page,
     limit,
@@ -79,7 +94,7 @@ export const getRoomByIdService = async (
     throw new NotFoundError("Room not found");
   }
 
-  return toRoomResponse(room);
+  return toRoomResponse(room, actor);
 };
 
 export const updateRoomService = async (
@@ -117,7 +132,7 @@ export const updateRoomService = async (
       actorIsPrivileged && { isActive: dto.isActive }),
   });
 
-  return toRoomResponse(room);
+  return toRoomResponse(room, actor);
 };
 
 export const deleteRoomService = async (
@@ -147,22 +162,40 @@ export const deleteRoomService = async (
 
 export const joinRoomService = async (
   roomId: string,
-  actor: JwtPayload,
-): Promise<void> => {
+  code?: string,
+  actor?: JwtPayload,
+): Promise<{ roomId: string; name: string; code: string | null }> => {
   const room = await roomRepository.findById(roomId, false);
   if (!room) {
     throw new NotFoundError("Room not found or inactive");
   }
 
-  try {
-    await roomRepository.update(roomId, {
-      members: {
-        connect: { id: actor.userId }
-      }
-    } as any);
-  } catch (error) {
-    mapPrismaError(error);
+  const isStaff = actor ? (isPrivilegedRole(actor.role) || actor.role === "TEACHER" || actor.userId === room.createdById) : false;
+
+  // If not staff, require the matching 6-digit room code
+  if (!isStaff && room.code) {
+    if (!code || code.trim() !== room.code) {
+      throw new BadRequestError("Invalid 6-digit room key");
+    }
   }
+
+  if (actor) {
+    try {
+      await roomRepository.update(roomId, {
+        members: {
+          connect: { id: actor.userId },
+        },
+      } as any);
+    } catch (error) {
+      mapPrismaError(error);
+    }
+  }
+
+  return {
+    roomId: room.id,
+    name: room.name,
+    code: isStaff ? room.code : null,
+  };
 };
 
 export const leaveRoomService = async (

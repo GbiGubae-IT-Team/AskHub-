@@ -13,6 +13,15 @@ interface Discussion {
 
 interface RoomPageProps {
   onBack?: () => void;
+  activeRoom?: {
+    id: string | number;
+    name: string;
+    description?: string | null;
+    category?: string | null;
+    code?: string | null;
+    staffVerified?: boolean;
+    members?: number;
+  } | null;
 }
 
 const DISCUSSIONS: Discussion[] = [
@@ -50,7 +59,7 @@ const DISCUSSIONS: Discussion[] = [
   }
 ];
 
-export function RoomPage({ onBack }: RoomPageProps) {
+export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
   const [discussions, setDiscussions] = useState<any[]>([]);
   const [activeNav, setActiveNav] = useState('Rooms');
   const [subject, setSubject] = useState('');
@@ -59,7 +68,7 @@ export function RoomPage({ onBack }: RoomPageProps) {
 
   useEffect(() => {
     apiFetch("/questions")
-      .then(res => setDiscussions(res.data.items))
+      .then(res => setDiscussions(res?.data?.items || []))
       .catch(console.error);
   }, []);
 
@@ -174,11 +183,16 @@ export function RoomPage({ onBack }: RoomPageProps) {
 
       {/* Room Banner */}
       <section className="bg-[#2D6DB5] px-6 py-10 text-center text-white">
+        {activeRoom?.category && (
+          <span className="inline-block bg-white/15 text-white/90 text-xs font-semibold px-3 py-1 rounded-full mb-3">
+            {activeRoom.category}
+          </span>
+        )}
         <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-3">
-          The Path to Spiritual Growth
+          {activeRoom?.name || 'The Path to Spiritual Growth'}
         </h2>
         <p className="text-white/85 text-sm md:text-base max-w-xl mx-auto leading-relaxed mb-5">
-          A space for students to discuss faith, challenges, and growth in a supportive community.
+          {activeRoom?.description || 'A space for students to discuss faith, challenges, and growth in a supportive community.'}
         </p>
         <p className="text-white/60 text-xs md:text-sm italic max-w-lg mx-auto leading-relaxed font-light">
           የሰነፍ መንገድ በዓይኑ የቀናች ናት፤ ጠቢብ ግን ምክርን ይሰማል።
@@ -208,8 +222,12 @@ export function RoomPage({ onBack }: RoomPageProps) {
                   {/* Meta row */}
                   <div className="flex items-center justify-between mb-2">
                     <div>
-                      <span className="text-xs font-semibold text-[#2D6DB5]">{d.author}</span>
-                      <span className="text-xs text-gray-400 ml-2">{d.timeAgo}</span>
+                      <span className="text-xs font-semibold text-[#2D6DB5]">
+                        {typeof d.author === 'object' ? (d.author?.anonymousId || d.author?.name || 'Anonymous') : (d.author || 'Anonymous')}
+                      </span>
+                      <span className="text-xs text-gray-400 ml-2">
+                        {d.timeAgo || (d.createdAt ? new Date(d.createdAt).toLocaleDateString() : '')}
+                      </span>
                     </div>
                     <span className={`text-xs font-medium px-2.5 py-0.5 rounded ${
                       d.status === "ANSWERED"

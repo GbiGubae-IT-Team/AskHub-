@@ -4,54 +4,87 @@ import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { QuestionCard } from './components/QuestionCard';
 import { HotQuestions } from './components/HotQuestions';
-import { StaffPage } from './pages/StaffPage';
+import { StaffPage, StaffRoom } from './pages/StaffPage';
 import { RoomPage } from './pages/RoomPage';
 import { JoinRoomsModal, Room } from './components/JoinRoomsModal';
 import { apiFetch } from './api';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<'home' | 'staff' | 'room'>('home');
-  const [joinedRoomIds, setJoinedRoomIds] = useState<Set<number>>(new Set());
+  const [joinedRoomIds, setJoinedRoomIds] = useState<Set<string | number>>(new Set());
+  const [activeRoom, setActiveRoom] = useState<Room | StaffRoom | null>(null);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [questions, setQuestions] = useState<any[]>([]);
 
-  useEffect(() => {
-    // Load Rooms
+  const loadRooms = () => {
     apiFetch("/rooms")
       .then(res => setRooms(res?.data?.items || []))
       .catch(console.error);
+  };
 
-    // Load Questions
+  const loadQuestions = () => {
     apiFetch("/questions")
       .then(res => setQuestions(res?.data?.items || []))
       .catch(console.error);
-      
-    // Initialize joined rooms from local storage for now as a fallback
+  };
+
+  useEffect(() => {
+    loadRooms();
+    loadQuestions();
+
+    // Initialize joined rooms from local storage
     const savedIds = JSON.parse(localStorage.getItem('joinedRooms') || '[]');
     setJoinedRoomIds(new Set(savedIds));
   }, []);
+
   const hasUnjoinedRooms = rooms.some(r => !joinedRoomIds.has(r.id));
 
-  const handleJoinRoom = async (room: Room) => {
+  const handleJoinRoom = async (room: Room, code?: string) => {
     try {
-      await apiFetch(`/rooms/${room.id}/join`, { method: "POST" });
-    } catch(err) {
-      console.error(err);
+      await apiFetch(`/rooms/${room.id}/join`, {
+        method: "POST",
+        body: JSON.stringify({ code }),
+      });
+      const newJoined = new Set(joinedRoomIds).add(room.id);
+      setJoinedRoomIds(newJoined);
+      localStorage.setItem('joinedRooms', JSON.stringify(Array.from(newJoined)));
+      setActiveRoom(room);
+      setIsRoomModalOpen(false);
+      setCurrentPage('room');
+    } catch (err: any) {
+      console.error("Failed to join room:", err);
+      throw err;
     }
-    const newJoined = new Set(joinedRoomIds).add(room.id);
-    setJoinedRoomIds(newJoined);
-    localStorage.setItem('joinedRooms', JSON.stringify(Array.from(newJoined)));
-    setIsRoomModalOpen(false);
-    setCurrentPage('room');
   };
 
   if (currentPage === 'staff') {
-    return <StaffPage onBack={() => setCurrentPage('home')} onGoToRoom={() => setCurrentPage('room')} />;
+    return (
+      <StaffPage
+        onBack={() => {
+          setCurrentPage('home');
+          loadRooms();
+          loadQuestions();
+        }}
+        onGoToRoom={(room) => {
+          if (room) setActiveRoom(room);
+          setCurrentPage('room');
+        }}
+      />
+    );
   }
 
   if (currentPage === 'room') {
-    return <RoomPage onBack={() => setCurrentPage('home')} />;
+    return (
+      <RoomPage
+        onBack={() => {
+          setCurrentPage('home');
+          loadRooms();
+          loadQuestions();
+        }}
+        activeRoom={activeRoom}
+      />
+    );
   }
 
   return (
