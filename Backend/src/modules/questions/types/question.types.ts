@@ -26,6 +26,12 @@ export type QuestionRecord = {
   author: QuestionAuthorRecord;
   roomId: string | null;
   tags: QuestionTagRecord[];
+  answers: {
+    id: string;
+    content: string;
+    createdAt: Date;
+    author: QuestionAuthorRecord;
+  }[];
 };
 
 export interface QuestionAuthorResponse {
@@ -44,6 +50,12 @@ export interface QuestionResponse {
   roomId: string | null;
   author: QuestionAuthorResponse;
   tags: QuestionTagRecord[];
+  answers: {
+    id: string;
+    content: string;
+    createdAt: Date;
+    author: QuestionAuthorResponse;
+  }[];
 }
 
 export interface ListQuestionsQuery {
@@ -98,5 +110,17 @@ export const toQuestionResponse = (
           role: question.author.role,
         }
       : { anonymousId: question.author.anonymousId },
+    answers: question.answers.map(ans => ({
+      id: ans.id,
+      content: ans.content,
+      createdAt: ans.createdAt,
+      author: revealAuthor
+        ? {
+            id: ans.author.id,
+            anonymousId: ans.author.anonymousId,
+            role: ans.author.role,
+          }
+        : { anonymousId: ans.author.anonymousId },
+    })),
   };
 };

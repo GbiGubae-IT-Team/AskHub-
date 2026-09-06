@@ -80,6 +80,7 @@ export default function App() {
                 title={question.title}
                 preview={question.content}
                 isAnswered={question.status === "ANSWERED"}
+                answers={question.answers}
               />
             ))}
           </div>

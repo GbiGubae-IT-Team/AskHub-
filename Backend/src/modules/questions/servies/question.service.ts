@@ -82,7 +82,7 @@ export const createQuestionService = async (
   }
 
   const question = await questionRepository.create({
-    title: dto.title,
+    ...(dto.title !== undefined && { title: dto.title }),
     content: dto.content,
     isAnonymous: dto.isAnonymous ?? true,
     authorId: actor.userId,

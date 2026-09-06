@@ -27,6 +27,23 @@ const questionSelect = {
       },
     },
   },
+  answers: {
+    select: {
+      id: true,
+      content: true,
+      createdAt: true,
+      author: {
+        select: {
+          id: true,
+          anonymousId: true,
+          role: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+  },
 } satisfies Prisma.QuestionSelect;
 
 const mapQuestion = (
@@ -42,6 +59,7 @@ const mapQuestion = (
   roomId: row.roomId,
   author: row.author,
   tags: row.tags.map((t) => t.tag),
+  answers: row.answers,
 });
 
 export const questionRepository = {
@@ -84,7 +102,7 @@ export const questionRepository = {
   }) {
     const row = await prisma.question.create({
       data: {
-        title: data.title,
+        ...(data.title !== undefined && { title: data.title }),
         content: data.content,
         isAnonymous: data.isAnonymous,
         author: { connect: { id: data.authorId } },

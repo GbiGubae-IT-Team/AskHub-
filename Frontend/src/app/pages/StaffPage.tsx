@@ -3,7 +3,7 @@ import { Menu, Search, Plus, MessageSquare, Grid, Users, User, X } from 'lucide-
 import { apiFetch } from '../api';
 
 interface PendingQuestion {
-  id: number;
+  id: string;
   category: string;
   title: string;
   preview: string;
@@ -45,11 +45,11 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
 
   const pendingCount = questions?.length || 0;
 
-  const handleAnswerChange = (id: number, value: string) => {
+  const handleAnswerChange = (id: string, value: string) => {
     setQuestions(qs => qs.map(q => q.id === id ? { ...q, answer: value } : q));
   };
 
-  const handleSubmitAnswer = async (id: number) => {
+  const handleSubmitAnswer = async (id: string) => {
     const q = questions.find(x => x.id === id);
     if (!q || !(q.answer || '').trim()) return;
     try {
