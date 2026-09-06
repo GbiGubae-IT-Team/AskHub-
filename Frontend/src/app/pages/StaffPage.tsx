@@ -323,7 +323,7 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 px-4 md:px-10 lg:px-20 py-6 pb-24 md:pb-8 max-w-5xl mx-auto w-full">
+      <main className="flex-1 px-4 sm:px-6 md:px-8 py-6 pb-24 md:pb-8 max-w-[1500px] w-full mx-auto">
         {/* TAB 1: QUESTIONS */}
         {activeTab === 'QUESTIONS' && (
           <div>
@@ -515,7 +515,7 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
         {activeTab === 'ROOMS' && (
           <div>
             {/* Rooms Header Row */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 border-b border-gray-200 pb-4">
               <div>
                 <h2 className="font-bold text-gray-900 text-xl flex items-center gap-2">
                   <DoorOpen className="text-[#2D6DB5]" />
@@ -528,14 +528,14 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => fetchRooms()}
-                  className="px-3 py-2 text-xs font-semibold text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 rounded-lg shadow-2xs transition-colors cursor-pointer"
+                  className="px-3.5 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-none transition-colors cursor-pointer"
                   title="Refresh rooms"
                 >
                   Refresh
                 </button>
                 <button
                   onClick={() => setIsCreateRoomOpen(true)}
-                  className="flex items-center gap-1.5 bg-[#F5A623] hover:bg-[#E09612] text-white font-bold px-4 py-2 rounded-lg transition-colors text-sm shadow-2xs cursor-pointer"
+                  className="flex items-center gap-1.5 bg-[#F5A623] hover:bg-[#E09612] text-white font-bold px-4 py-2 rounded-none transition-colors text-sm cursor-pointer"
                 >
                   <Plus size={16} />
                   CREATE ROOM
@@ -543,9 +543,9 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
               </div>
             </div>
 
-            {/* Rooms List */}
+            {/* Rooms List - Horizontal Cards with Sharp Borders & No Shadows */}
             {rooms.length === 0 ? (
-              <div className="text-center py-16 bg-white rounded-xl border border-gray-100 shadow-2xs text-gray-400">
+              <div className="text-center py-16 bg-white border border-gray-300 rounded-none text-gray-400">
                 <DoorOpen size={36} className="mx-auto text-gray-300 mb-2" />
                 <p className="font-semibold text-gray-700">No rooms created yet</p>
                 <p className="text-xs text-gray-400 mt-1 max-w-sm mx-auto">
@@ -553,63 +553,70 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
                 </p>
                 <button
                   onClick={() => setIsCreateRoomOpen(true)}
-                  className="mt-4 inline-flex items-center gap-1.5 bg-[#2D6DB5] text-white font-bold text-xs px-4 py-2 rounded-lg shadow-2xs hover:bg-[#235892] transition-colors cursor-pointer"
+                  className="mt-4 inline-flex items-center gap-1.5 bg-[#2D6DB5] text-white font-bold text-xs px-4 py-2 rounded-none hover:bg-[#235892] transition-colors cursor-pointer"
                 >
                   <Plus size={14} /> Create Room
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-3">
                 {rooms.map((room) => (
                   <div
                     key={room.id}
-                    className="bg-white rounded-xl border border-gray-200 p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
+                    className="bg-white border border-gray-300 rounded-none p-4 sm:p-5 hover:border-gray-400 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-4"
                   >
-                    <div>
-                      {/* Badges row */}
-                      <div className="flex items-center justify-between gap-2 mb-2">
-                        <div className="flex items-center gap-1.5">
-                          {room.category && (
-                            <span className="bg-blue-50 text-blue-700 border border-blue-200/70 text-[11px] font-semibold px-2.5 py-0.5 rounded-full">
-                              {room.category}
-                            </span>
-                          )}
-                          {room.staffVerified && (
-                            <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/70 text-[11px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
-                              <ShieldCheck size={11} /> Verified
-                            </span>
-                          )}
-                        </div>
+                    {/* Left Details Section */}
+                    <div className="flex-1 min-w-0 pr-0 lg:pr-6">
+                      {/* Meta badges row */}
+                      <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                        {room.category && (
+                          <span className="bg-blue-50 text-blue-700 border border-blue-200 text-[11px] font-semibold px-2.5 py-0.5 rounded-none">
+                            {room.category}
+                          </span>
+                        )}
+                        {room.staffVerified && (
+                          <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-semibold px-2 py-0.5 rounded-none flex items-center gap-1">
+                            <ShieldCheck size={11} /> Verified
+                          </span>
+                        )}
                         <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                            room.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-none border ${
+                            room.isActive
+                              ? 'bg-green-50 border-green-200 text-green-700'
+                              : 'bg-gray-50 border-gray-200 text-gray-500'
                           }`}
                         >
                           {room.isActive ? 'ACTIVE' : 'INACTIVE'}
                         </span>
+                        {room.createdAt && (
+                          <span className="text-[11px] text-gray-400 ml-1">
+                            Created {new Date(room.createdAt).toLocaleDateString()}
+                          </span>
+                        )}
                       </div>
 
-                      {/* Title & Description */}
-                      <h3 className="font-bold text-gray-900 text-base mb-1.5 leading-snug">
+                      {/* Room Title */}
+                      <h3 className="font-bold text-gray-900 text-base sm:text-lg leading-snug">
                         {room.name}
                       </h3>
-                      <p className="text-xs text-gray-600 leading-relaxed mb-4 line-clamp-2">
+
+                      {/* Description */}
+                      <p className="text-xs sm:text-sm text-gray-600 leading-relaxed mt-1 max-w-4xl line-clamp-2">
                         {room.description || 'No description provided.'}
                       </p>
                     </div>
 
-                    <div>
-                      {/* 6-Digit Room Key Highlight Box */}
-                      <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-3 mb-4 flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center text-[#E07B2A]">
-                            <KeyRound size={16} />
-                          </div>
+                    {/* Right Horizontal Key & Action Section */}
+                    <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 pt-3 lg:pt-0 border-t lg:border-t-0 border-gray-100 flex-shrink-0">
+                      {/* 6-Digit Room Key Box - Sharp border & No shadow */}
+                      <div className="bg-amber-50/90 border border-amber-300 rounded-none px-3.5 py-2 flex items-center gap-3">
+                        <div className="flex items-center gap-2">
+                          <KeyRound size={15} className="text-[#E07B2A]" />
                           <div>
-                            <span className="text-[10px] uppercase font-bold tracking-wider text-amber-800 block">
-                              6-Digit Room Key
+                            <span className="text-[10px] uppercase font-bold tracking-wider text-amber-800 block leading-none mb-1">
+                              Room Key
                             </span>
-                            <span className="text-lg font-black tracking-widest text-gray-900 font-mono">
+                            <span className="text-base font-mono font-bold tracking-widest text-gray-900 leading-none">
                               {room.code || '------'}
                             </span>
                           </div>
@@ -618,37 +625,32 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
                         <button
                           type="button"
                           onClick={() => handleCopyKey(room.code)}
-                          className="px-3 py-1.5 bg-white hover:bg-amber-100/70 text-amber-900 text-xs font-bold rounded-lg border border-amber-300 shadow-2xs transition-colors flex items-center gap-1 cursor-pointer"
+                          className="px-2.5 py-1.5 bg-white hover:bg-amber-100 text-amber-900 text-xs font-bold border border-amber-300 rounded-none transition-colors flex items-center gap-1 cursor-pointer"
                           title="Copy 6-digit key to share with attendees"
                         >
                           {copiedCode === room.code ? (
                             <>
-                              <Check size={13} className="text-emerald-600" />
+                              <Check size={12} className="text-emerald-600" />
                               <span className="text-emerald-700">Copied!</span>
                             </>
                           ) : (
                             <>
-                              <Copy size={13} />
+                              <Copy size={12} />
                               <span>Copy Key</span>
                             </>
                           )}
                         </button>
                       </div>
 
-                      {/* Card Footer: Enter Room */}
-                      <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                        <span className="text-[11px] text-gray-400">
-                          {room.createdAt ? new Date(room.createdAt).toLocaleDateString() : ''}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => onGoToRoom?.(room)}
-                          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#2D6DB5] hover:text-[#1e4b80] hover:underline cursor-pointer"
-                        >
-                          <span>Enter Room</span>
-                          <ExternalLink size={13} />
-                        </button>
-                      </div>
+                      {/* Enter Room Button - Sharp border & No shadow */}
+                      <button
+                        type="button"
+                        onClick={() => onGoToRoom?.(room)}
+                        className="px-4 py-2.5 bg-[#2D6DB5] hover:bg-[#245A94] text-white text-xs font-bold rounded-none transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+                      >
+                        <span>Enter Room</span>
+                        <ExternalLink size={13} />
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -751,17 +753,13 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
             onClick={() => setIsCreateRoomOpen(false)}
           />
 
-          <div className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl shadow-2xl sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-md sm:rounded-2xl">
-            <div className="flex justify-center pt-3 pb-1 sm:hidden">
-              <div className="w-10 h-1 bg-gray-300 rounded-full" />
-            </div>
-
-            <div className="px-6 pt-4 pb-6">
-              <div className="flex items-center justify-between mb-5">
+          <div className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-none border border-gray-400 sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-md">
+            <div className="px-6 pt-5 pb-6">
+              <div className="flex items-center justify-between mb-5 border-b border-gray-200 pb-3">
                 <h2 className="text-lg font-bold text-gray-900">Create Discussion Room</h2>
                 <button
                   onClick={() => setIsCreateRoomOpen(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+                  className="text-gray-400 hover:text-gray-600 transition-colors p-1 cursor-pointer"
                   aria-label="Close"
                 >
                   <X size={20} />
@@ -770,7 +768,7 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
 
               {/* Room Name */}
               <div className="mb-4">
-                <label className="block text-sm font-semibold text-[#E07B2A] mb-1.5">
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#E07B2A] mb-1.5">
                   Room Name
                 </label>
                 <input
@@ -778,19 +776,19 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
                   value={roomName}
                   onChange={(e) => setRoomName(e.target.value)}
                   placeholder="e.g., Weekly Bible Study"
-                  className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D6DB5] focus:border-transparent text-gray-700"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-none focus:outline-none focus:border-[#2D6DB5] text-gray-700"
                 />
               </div>
 
               {/* Category */}
               <div className="mb-4">
-                <label className="block text-sm font-semibold text-[#E07B2A] mb-1.5">
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#E07B2A] mb-1.5">
                   Category
                 </label>
                 <select
                   value={roomCategory}
                   onChange={(e) => setRoomCategory(e.target.value)}
-                  className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D6DB5] focus:border-transparent text-gray-700 bg-white"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-none focus:outline-none focus:border-[#2D6DB5] text-gray-700 bg-white"
                 >
                   <option value="Faith & Study">Faith & Study</option>
                   <option value="Campus Life">Campus Life</option>
@@ -802,7 +800,7 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
 
               {/* Description */}
               <div className="mb-5">
-                <label className="block text-sm font-semibold text-[#E07B2A] mb-1.5">
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#E07B2A] mb-1.5">
                   Description
                 </label>
                 <textarea
@@ -810,11 +808,11 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
                   onChange={(e) => setRoomDescription(e.target.value)}
                   placeholder="What will this room focus on?"
                   rows={3}
-                  className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[#2D6DB5] focus:border-transparent text-gray-700"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-none resize-none focus:outline-none focus:border-[#2D6DB5] text-gray-700"
                 />
               </div>
 
-              <div className="p-3 bg-amber-50 border border-amber-200/80 rounded-xl mb-5 text-xs text-amber-800 flex items-center gap-2">
+              <div className="p-3 bg-amber-50 border border-amber-300 rounded-none mb-5 text-xs text-amber-900 flex items-center gap-2">
                 <KeyRound size={16} className="text-[#E07B2A] flex-shrink-0" />
                 <span>A random 6-digit Room Key will be generated automatically for attendees.</span>
               </div>
@@ -823,7 +821,7 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
               <button
                 onClick={handleCreateRoom}
                 disabled={!roomName.trim()}
-                className="w-full bg-[#2D6DB5] hover:bg-[#245A94] disabled:bg-gray-300 text-white font-bold py-3 rounded-lg transition-colors tracking-wide uppercase text-sm cursor-pointer shadow-2xs"
+                className="w-full bg-[#2D6DB5] hover:bg-[#245A94] disabled:bg-gray-300 text-white font-bold py-2.5 rounded-none transition-colors tracking-wide uppercase text-xs cursor-pointer"
               >
                 Create Room
               </button>
@@ -835,8 +833,8 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
       {/* Newly Created Room 6-Digit Code Popup */}
       {newlyCreatedRoom && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center animate-in fade-in zoom-in duration-200">
-            <div className="w-12 h-12 bg-amber-100 text-[#E07B2A] rounded-full flex items-center justify-center mx-auto mb-3">
+          <div className="bg-white rounded-none border border-gray-400 max-w-sm w-full p-6 text-center">
+            <div className="w-12 h-12 bg-amber-100 text-[#E07B2A] rounded-none flex items-center justify-center mx-auto mb-3">
               <KeyRound size={24} />
             </div>
             <h3 className="font-bold text-gray-900 text-lg mb-1">Room Created Successfully!</h3>
@@ -844,14 +842,14 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
               Room: <strong className="text-gray-800">{newlyCreatedRoom.name}</strong>
             </p>
 
-            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-xl p-4 mb-4">
+            <div className="bg-amber-50/90 border border-amber-300 rounded-none p-4 mb-4">
               <span className="text-[11px] uppercase font-bold text-amber-800 tracking-wider block mb-1">
                 Shareable 6-Digit Room Key
               </span>
               <div className="text-3xl font-black font-mono tracking-widest text-gray-900 my-1">
                 {newlyCreatedRoom.code}
               </div>
-              <p className="text-[11px] text-gray-500 mt-1">
+              <p className="text-[11px] text-gray-600 mt-1">
                 Attendees and students can join this room without logging in using this 6-digit key.
               </p>
             </div>
@@ -859,14 +857,14 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
             <div className="flex gap-2">
               <button
                 onClick={() => handleCopyKey(newlyCreatedRoom.code)}
-                className="flex-1 bg-[#2D6DB5] hover:bg-[#235892] text-white text-xs font-bold py-2.5 px-4 rounded-lg flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                className="flex-1 bg-[#2D6DB5] hover:bg-[#235892] text-white text-xs font-bold py-2.5 px-4 rounded-none flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
               >
                 {copiedCode === newlyCreatedRoom.code ? <Check size={14} /> : <Copy size={14} />}
                 <span>{copiedCode === newlyCreatedRoom.code ? 'Copied!' : 'Copy Key'}</span>
               </button>
               <button
                 onClick={() => setNewlyCreatedRoom(null)}
-                className="py-2.5 px-4 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                className="py-2.5 px-4 text-xs font-semibold text-gray-700 hover:bg-gray-100 rounded-none border border-gray-300 transition-colors cursor-pointer"
               >
                 Done
               </button>
