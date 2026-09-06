@@ -163,6 +163,10 @@ export const updateUserService = async (
     throw new ForbiddenError("Only admins can change user roles");
   }
 
+  if (dto.staffStatus !== undefined && actor.role !== UserRole.SUPER_ADMIN) {
+    throw new ForbiddenError("Only super admins can change staff status");
+  }
+
   if (dto.role !== undefined) {
     assertCanAssignRole(actor.role, dto.role);
   }
@@ -179,6 +183,7 @@ export const updateUserService = async (
       password: await passwordService.hashPassword(dto.password),
     }),
     ...(dto.role !== undefined && actorIsPrivileged && { role: dto.role }),
+    ...(dto.staffStatus !== undefined && actor.role === UserRole.SUPER_ADMIN && { staffStatus: dto.staffStatus }),
   });
 
   return toPrivateUser(user);

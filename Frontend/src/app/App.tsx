@@ -6,6 +6,7 @@ import { Sidebar } from './components/Sidebar';
 import { QuestionCard } from './components/QuestionCard';
 import { HotQuestions } from './components/HotQuestions';
 import { StaffPage } from './pages/StaffPage';
+import { SuperAdminPage } from './pages/SuperAdminPage';
 import { RoomPage } from './pages/RoomPage';
 import { AuthPage } from './pages/AuthPage';
 import { JoinRoomsModal, Room } from './components/JoinRoomsModal';
@@ -183,6 +184,53 @@ function ProtectedStaffRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function ProtectedSuperAdminRoute({ children }: { children: React.ReactNode }) {
+  const navigate = useNavigate();
+  const token = getAuthToken();
+
+  if (!token) {
+    return <Navigate to="/signin" replace />;
+  }
+
+  const user = getCurrentUser();
+  if (!user || user.role !== 'SUPER_ADMIN') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white border border-gray-200 rounded-xl p-8 text-center shadow-sm">
+          <div className="w-14 h-14 bg-amber-100 text-[#E07B2A] rounded-full flex items-center justify-center mx-auto mb-4">
+            <ShieldAlert size={28} />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Super Admin Access Restricted</h2>
+          <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+            This dashboard is exclusively available to Super Administrators.
+          </p>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => {
+                removeAuthToken();
+                navigate('/signin');
+              }}
+              className="w-full bg-[#2D6DB5] hover:bg-[#245A94] text-white font-bold py-2.5 rounded-lg text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <LogIn size={16} />
+              <span>Sign In with Super Admin Account</span>
+            </button>
+            <button
+              onClick={() => navigate('/')}
+              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2.5 rounded-lg text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <ArrowLeft size={16} />
+              <span>Return to Home</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+}
+
 export default function App() {
   const navigate = useNavigate();
 
@@ -203,6 +251,14 @@ export default function App() {
               onGoToRoom={(room) => room?.id && navigate(`/rooms/${room.id}`)}
             />
           </ProtectedStaffRoute>
+        }
+      />
+      <Route
+        path="/superadmin"
+        element={
+          <ProtectedSuperAdminRoute>
+            <SuperAdminPage onBack={() => navigate('/')} />
+          </ProtectedSuperAdminRoute>
         }
       />
       <Route path="/rooms/:roomId" element={<RoomPage onBack={() => navigate('/')} />} />

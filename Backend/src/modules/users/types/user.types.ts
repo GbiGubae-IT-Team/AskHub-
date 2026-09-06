@@ -1,4 +1,4 @@
-import type { UserRole } from "../../../generated/prisma/client.js";
+import type { UserRole, StaffStatus } from "../../../generated/prisma/client.js";
 
 export type UserRecord = {
   id: string;
@@ -6,6 +6,7 @@ export type UserRecord = {
   role: UserRole;
   email: string | null;
   isActive: boolean;
+  staffStatus: StaffStatus | null;
   deletedAt: Date | null;
   createdAt: Date;
 };
@@ -20,6 +21,7 @@ export interface UserPublicResponse {
 export interface UserResponse extends UserPublicResponse {
   email: string | null;
   isActive: boolean;
+  staffStatus: StaffStatus | null;
   deletedAt: Date | null;
 }
 
@@ -49,5 +51,6 @@ export const toPrivateUser = (user: UserRecord): UserResponse => ({
   ...toPublicUser(user),
   email: user.email,
   isActive: user.isActive,
+  staffStatus: user.staffStatus,
   deletedAt: user.deletedAt,
 });

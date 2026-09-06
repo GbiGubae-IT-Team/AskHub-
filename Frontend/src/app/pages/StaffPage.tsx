@@ -17,7 +17,7 @@ import {
   History,
   LogOut,
 } from 'lucide-react';
-import { apiFetch, removeAuthToken, isApprovedStaff } from '../api';
+import { apiFetch, removeAuthToken, isApprovedStaff, getCurrentUser } from '../api';
 
 type QuestionStatusType = "PENDING" | "APPROVED" | "REJECTED" | "ANSWERED";
 
@@ -55,6 +55,8 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('QUESTIONS');
+  const user = getCurrentUser();
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
 
   const handleBack = () => {
     if (onBack) onBack();
@@ -346,6 +348,15 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
                   <Plus size={16} />
                   ROOM
                 </button>
+                {isSuperAdmin && (
+                  <button
+                    onClick={() => navigate('/superadmin')}
+                    className="flex items-center gap-1.5 bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-2 rounded-lg transition-colors text-sm shadow-2xs cursor-pointer ml-2"
+                  >
+                    <ShieldCheck size={16} />
+                    SUPER ADMIN
+                  </button>
+                )}
               </div>
             </div>
 

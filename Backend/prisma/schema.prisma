@@ -19,6 +19,12 @@ enum UserRole {
   SUPER_ADMIN
 }
 
+enum StaffStatus {
+  PENDING
+  APPROVED
+  SUSPENDED
+}
+
 enum QuestionStatus {
   PENDING      
   APPROVED     // visible to teachers/public
@@ -45,6 +51,7 @@ model User {
   email         String?   @unique
   password      String?
   isActive      Boolean   @default(true)
+  staffStatus   StaffStatus? @default(PENDING)
   deletedAt     DateTime?
 
   createdAt     DateTime  @default(now())
