@@ -13,6 +13,8 @@ import {
   type RoomResponse,
 } from "../types/room.types.js";
 import { roomValidationService } from "./roomValidation.service.js";
+import { NotificationTarget } from "../../../generated/prisma/client.js";
+import { sendNotificationToUser } from "../../notifications/servies/notification.service.js";
 
 const canDeleteRoom = (role: JwtPayload["role"]) =>
   hasPermission(role, "room:delete");
@@ -49,6 +51,12 @@ export const createRoomService = async (
     ...(dto.staffVerified !== undefined && { staffVerified: dto.staffVerified }),
     code,
     createdBy: { connect: { id: actor.userId } },
+  });
+
+  await sendNotificationToUser({
+    targetType: NotificationTarget.PUBLIC,
+    content: `New room created: ${dto.name}`,
+    createdById: actor.userId,
   });
 
   return toRoomResponse(room, actor);

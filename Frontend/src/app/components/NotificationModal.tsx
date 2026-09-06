@@ -1,7 +1,7 @@
 import { X } from 'lucide-react';
 
 interface Notification {
-  id: number;
+  id: string;
   message: string;
   time: string;
   read: boolean;
@@ -11,7 +11,7 @@ interface NotificationModalProps {
   isOpen: boolean;
   onClose: () => void;
   notifications: Notification[];
-  onMarkAsRead: (id: number) => void;
+  onMarkAsRead: (id: string) => void;
   onMarkAllAsRead: () => void;
 }
 

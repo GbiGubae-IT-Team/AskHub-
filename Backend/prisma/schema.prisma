@@ -25,6 +25,12 @@ enum StaffStatus {
   SUSPENDED
 }
 
+enum NotificationTarget {
+  PUBLIC
+  STAFF
+  USER
+}
+
 enum QuestionStatus {
   PENDING      
   APPROVED     // visible to teachers/public
@@ -65,6 +71,7 @@ model User {
   notificationsCreated  Notification[] @relation("NotificationCreator")
   roomsCreated          Room[]         @relation("RoomCreator")
   roomsJoined           Room[]         @relation("RoomMembers")
+  notificationReads     NotificationRead[]
 }
 
 model Question {
@@ -173,15 +180,27 @@ model Vote {
 }
 
 model Notification {
-  id        String   @id @default(uuid())
-  content   String
-  isRead    Boolean  @default(false)
+  id          String             @id @default(uuid())
+  content     String
+  targetType  NotificationTarget @default(USER)
 
-  userId    String
-  user      User     @relation("NotificationRecipient", fields: [userId], references: [id])
+  userId      String?
+  user        User?              @relation("NotificationRecipient", fields: [userId], references: [id])
 
   createdById String?
-  createdBy   User?    @relation("NotificationCreator", fields: [createdById], references: [id])
+  createdBy   User?              @relation("NotificationCreator", fields: [createdById], references: [id])
 
-  createdAt DateTime @default(now())
+  createdAt   DateTime           @default(now())
+  reads       NotificationRead[]
+}
+
+model NotificationRead {
+  id             String       @id @default(uuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id])
+  notificationId String
+  notification   Notification @relation(fields: [notificationId], references: [id])
+  readAt         DateTime     @default(now())
+
+  @@unique([userId, notificationId])
 }

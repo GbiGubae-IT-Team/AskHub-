@@ -1,4 +1,4 @@
-import { QuestionStatus } from "../../../generated/prisma/client.js";
+import { QuestionStatus, NotificationTarget } from "../../../generated/prisma/client.js";
 import { hasPermission } from "../../../core/constants/permissions.js";
 import { isPrivilegedRole } from "../../../core/constants/roleHierarchy.js";
 import { BadRequestError } from "../../../core/errors/BadRequestError.js";
@@ -19,6 +19,7 @@ import {
 } from "../types/question.types.js";
 import { questionValidationService } from "./questionValidation.service.js";
 import prisma from "../../../config/db.js";
+import { sendNotificationToUser } from "../../notifications/servies/notification.service.js";
 
 const canCreate = (role: JwtPayload["role"]) =>
   hasPermission(role, "question:create");
@@ -102,6 +103,12 @@ export const createQuestionService = async (
     authorId: authorId,
     ...(dto.roomId !== undefined && { roomId: dto.roomId }),
     ...(dto.tagIds !== undefined && { tagIds: dto.tagIds }),
+  });
+
+  await sendNotificationToUser({
+    targetType: NotificationTarget.STAFF,
+    content: `New question posted: ${dto.title || 'Untitled'}`,
+    createdById: authorId,
   });
 
   return toQuestionResponse(question, actor, actor ? canApprove(actor.role) : false);

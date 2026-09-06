@@ -5,6 +5,7 @@ import { SignInModal } from './SignInModal';
 import { NotificationModal } from './NotificationModal';
 import { SuccessModal } from './SuccessModal';
 import { apiFetch, getAuthToken } from '../api';
+import { useEffect } from 'react';
 
 interface HeaderProps {
   onGoToStaff?: () => void;
@@ -25,12 +26,32 @@ export function Header({ onGoToStaff, onGoToRoom, onGoToSignIn, activeTab: exter
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [questionText, setQuestionText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [notifications, setNotifications] = useState([
-    { id: 1, message: 'Your question "How can I trust God?" got answered!', time: '2 minutes ago', read: false },
-    { id: 2, message: 'New room created: "Prayer Warriors"', time: '1 hour ago', read: false },
-    { id: 3, message: 'Your question was marked as helpful', time: '3 hours ago', read: true },
-    { id: 4, message: 'New answer to "Dealing with anxiety"', time: '5 hours ago', read: true }
-  ]);
+  const [notifications, setNotifications] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      const token = getAuthToken();
+      if (!token) return;
+
+      try {
+        const res = await apiFetch('/notifications');
+        if (res?.data?.items) {
+          setNotifications(res.data.items.map((n: any) => ({
+            id: n.id,
+            message: n.content,
+            time: new Date(n.createdAt).toLocaleString(),
+            read: n.isRead
+          })));
+        }
+      } catch (e) {
+        console.error('Failed to fetch notifications', e);
+      }
+    };
+    fetchNotifications();
+    // Optional: poll every 30s
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const tabs = ['All', 'Faith', 'Bible', 'Prayer', 'Relationships', 'Struggles', 'General'];
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -47,14 +68,27 @@ export function Header({ onGoToStaff, onGoToRoom, onGoToSignIn, activeTab: exter
     navigate('/signin');
   };
 
-  const handleMarkAsRead = (id: number) => {
-    setNotifications(notifications.map(n =>
-      n.id === id ? { ...n, read: true } : n
-    ));
+  const handleMarkAsRead = async (id: string) => {
+    try {
+      await apiFetch(`/notifications/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ isRead: true })
+      });
+      setNotifications(notifications.map(n =>
+        n.id === id ? { ...n, read: true } : n
+      ));
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const handleMarkAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, read: true })));
+  const handleMarkAllAsRead = async () => {
+    try {
+      await apiFetch(`/notifications/read-all`, { method: 'PATCH' });
+      setNotifications(notifications.map(n => ({ ...n, read: true })));
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const handleAskQuestion = async () => {

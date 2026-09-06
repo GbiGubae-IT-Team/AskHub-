@@ -12,6 +12,7 @@ import {
   type PaginatedNotificationsResponse,
   type NotificationResponse,
 } from "../types/notification.types.js";
+import { NotificationTarget } from "../../../generated/prisma/client.js";
 import { notificationValidationService } from "./notificationValidation.service.js";
 
 const canRead = (role: JwtPayload["role"]) =>
@@ -24,12 +25,12 @@ const canDelete = (role: JwtPayload["role"]) =>
   hasPermission(role, "notification:delete");
 
 const canAccessNotification = (
-  notification: { userId: string; createdById: string | null },
+  notification: { userId: string | null; createdById: string | null; targetType: string },
   actor: JwtPayload,
 ) => {
-  if (notification.userId === actor.userId) {
-    return true;
-  }
+  if (notification.targetType === NotificationTarget.PUBLIC) return true;
+  if (notification.targetType === NotificationTarget.STAFF && actor.role !== 'STUDENT') return true;
+  if (notification.targetType === NotificationTarget.USER && notification.userId === actor.userId) return true;
 
   if (
     canCreate(actor.role) &&
@@ -68,6 +69,19 @@ const buildListFilters = (
     }
   }
 
+  const baseUnreadAndWhere = actor.role === 'STUDENT' ? {
+    OR: [
+      { targetType: NotificationTarget.PUBLIC },
+      { targetType: NotificationTarget.USER, userId: actor.userId }
+    ]
+  } : {
+    OR: [
+      { targetType: NotificationTarget.PUBLIC },
+      { targetType: NotificationTarget.STAFF },
+      { targetType: NotificationTarget.USER, userId: actor.userId }
+    ]
+  };
+
   if (scope === "sent") {
     return {
       where: { createdById: actor.userId },
@@ -79,36 +93,43 @@ const buildListFilters = (
     return {
       where: {
         OR: [
-          { userId: actor.userId },
+          baseUnreadAndWhere,
           { createdById: actor.userId },
         ],
       },
-      unreadWhere: { userId: actor.userId },
+      unreadWhere: baseUnreadAndWhere,
     };
   }
 
   return {
-    where: { userId: actor.userId },
-    unreadWhere: { userId: actor.userId },
+    where: baseUnreadAndWhere,
+    unreadWhere: baseUnreadAndWhere,
   };
 };
 
 /** Internal helper for other modules (e.g. answers) — no admin permission required. */
 export const sendNotificationToUser = async (params: {
-  userId: string;
+  userId?: string;
+  targetType: NotificationTarget;
   content: string;
-  createdById: string;
+  createdById?: string;
 }) => {
-  const user = await notificationRepository.findActiveUser(params.userId);
-  if (!user) {
-    return null;
+  if (params.targetType === NotificationTarget.USER && params.userId) {
+    const user = await notificationRepository.findActiveUser(params.userId);
+    if (!user) {
+      return null;
+    }
   }
 
-  return notificationRepository.create({
-    content: params.content,
-    userId: params.userId,
-    createdById: params.createdById,
-  });
+  return notificationRepository.create(
+    {
+      content: params.content,
+      targetType: params.targetType,
+      userId: params.userId,
+      createdById: params.createdById,
+    },
+    params.createdById || "system"
+  );
 };
 
 export const createNotificationService = async (
@@ -123,16 +144,19 @@ export const createNotificationService = async (
 
   const dto = notificationValidationService.validateCreate(body);
 
-  const user = await notificationRepository.findActiveUser(dto.userId);
-  if (!user) {
-    throw new BadRequestError("Target user not found or is inactive");
+  if (dto.userId) {
+    const user = await notificationRepository.findActiveUser(dto.userId);
+    if (!user) {
+      throw new BadRequestError("Target user not found or is inactive");
+    }
   }
 
   const notification = await notificationRepository.create({
     content: dto.content,
+    targetType: dto.userId ? NotificationTarget.USER : NotificationTarget.PUBLIC,
     userId: dto.userId,
     createdById: actor.userId,
-  });
+  }, actor.userId);
 
   return toNotificationResponse(notification);
 };
@@ -158,15 +182,22 @@ export const listNotificationsService = async (
   const { items, total, unreadCount } = await notificationRepository.findMany({
     where: {
       ...where,
-      ...(isRead !== undefined && { isRead }),
     },
     unreadWhere,
     skip,
     take: limit,
+    actorId: actor.userId
   });
 
+  // Since we fetch isRead dynamically, if isRead filter is applied we must filter after DB or use complex subquery.
+  // For simplicity, we just filter in memory if isRead is provided (if performance is an issue, update repository)
+  let finalItems = items;
+  if (isRead !== undefined) {
+    finalItems = items.filter(i => i.isRead === isRead);
+  }
+
   return {
-    items: items.map(toNotificationResponse),
+    items: finalItems.map(toNotificationResponse),
     total,
     page,
     limit,
@@ -185,7 +216,7 @@ export const getNotificationByIdService = async (
     );
   }
 
-  const notification = await notificationRepository.findById(id);
+  const notification = await notificationRepository.findById(id, actor.userId);
 
   if (!notification) {
     throw new NotFoundError("Notification not found");
@@ -209,7 +240,7 @@ export const updateNotificationService = async (
     );
   }
 
-  const existing = await notificationRepository.findById(id);
+  const existing = await notificationRepository.findById(id, actor.userId);
 
   if (!existing) {
     throw new NotFoundError("Notification not found");
@@ -235,10 +266,13 @@ export const updateNotificationService = async (
     );
   }
 
-  const notification = await notificationRepository.update(id, {
-    ...(dto.content !== undefined && { content: dto.content }),
-    ...(dto.isRead !== undefined && { isRead: dto.isRead }),
-  });
+  let notification = existing;
+  if (dto.content !== undefined) {
+    notification = await notificationRepository.update(id, { content: dto.content }, actor.userId);
+  }
+  if (dto.isRead === true) {
+    notification = (await notificationRepository.markAsRead(id, actor.userId)) || notification;
+  }
 
   return toNotificationResponse(notification);
 };
@@ -252,7 +286,8 @@ export const markAllNotificationsReadService = async (
     );
   }
 
-  const result = await notificationRepository.markAllRead(actor.userId);
+  const { where } = buildListFilters(actor, "received");
+  const result = await notificationRepository.markAllRead(actor.userId, where);
 
   return { updatedCount: result.count };
 };
@@ -261,7 +296,7 @@ export const deleteNotificationService = async (
   id: string,
   actor: JwtPayload,
 ): Promise<void> => {
-  const existing = await notificationRepository.findById(id);
+  const existing = await notificationRepository.findById(id, actor.userId);
 
   if (!existing) {
     throw new NotFoundError("Notification not found");

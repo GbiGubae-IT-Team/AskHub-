@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { UserRole } from "../../../generated/prisma/client.js";
+import { UserRole, NotificationTarget } from "../../../generated/prisma/client.js";
 import { hasPermission } from "../../../core/constants/permissions.js";
 import {
   assertCanAssignRole,
@@ -21,6 +21,7 @@ import {
   type UserResponse,
 } from "../types/user.types.js";
 import { userValidationService } from "./_Validation.service.js";
+import { sendNotificationToUser } from "../../notifications/servies/notification.service.js";
 
 const canManageUsers = (role: UserRole) => hasPermission(role, "user:manage");
 
@@ -185,6 +186,15 @@ export const updateUserService = async (
     ...(dto.role !== undefined && actorIsPrivileged && { role: dto.role }),
     ...(dto.staffStatus !== undefined && actor.role === UserRole.SUPER_ADMIN && { staffStatus: dto.staffStatus }),
   });
+
+  if (dto.staffStatus !== undefined && dto.staffStatus !== existing.staffStatus) {
+    await sendNotificationToUser({
+      targetType: NotificationTarget.USER,
+      userId: id,
+      content: `Your staff account status has been updated to ${dto.staffStatus}`,
+      createdById: actor.userId,
+    });
+  }
 
   return toPrivateUser(user);
 };
