@@ -62,8 +62,8 @@ export function ManageNotificationsPage({ onBack }: ManageNotificationsPageProps
   const fetchNotifications = async () => {
     setIsLoading(true);
     try {
-      // Fetch all (including inactive) by using scope=all — super admin sees them all
-      const res = await apiFetch('/notifications?scope=all&limit=100');
+      // scope=sent returns only notifications created by the logged-in user (this super admin)
+      const res = await apiFetch('/notifications?scope=sent&limit=100');
       if (res?.data?.items) {
         setNotifications(res.data.items);
       }
