@@ -1,4 +1,4 @@
-import { QuestionStatus } from "../../../generated/prisma/client.js";
+import { QuestionStatus, NotificationTarget } from "../../../generated/prisma/client.js";
 import { hasPermission } from "../../../core/constants/permissions.js";
 import { isPrivilegedRole } from "../../../core/constants/roleHierarchy.js";
 import { BadRequestError } from "../../../core/errors/BadRequestError.js";
@@ -98,6 +98,7 @@ export const createAnswerService = async (
     await sendNotificationToUser({
       userId: question.authorId,
       content: "Your question has been answered.",
+      targetType: NotificationTarget.USER,
       createdById: actor.userId,
     });
   }
