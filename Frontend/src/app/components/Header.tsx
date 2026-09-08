@@ -33,12 +33,13 @@ export function Header({ onGoToStaff, onGoToRoom, onGoToSignIn, activeTab: exter
       try {
         const res = await apiFetch('/notifications');
         if (res?.data?.items) {
-          setNotifications(res.data.items.map((n: any) => ({
+          const fetchedNotifications = res.data.items.map((n: any) => ({
             id: n.id,
             message: n.content,
             time: new Date(n.createdAt).toLocaleString(),
             read: n.isRead
-          })));
+          }));
+          setNotifications(fetchedNotifications.filter((n: any) => !n.read));
         }
       } catch (e) {
         console.error('Failed to fetch notifications', e);
@@ -71,9 +72,7 @@ export function Header({ onGoToStaff, onGoToRoom, onGoToSignIn, activeTab: exter
         method: 'PATCH',
         body: JSON.stringify({ isRead: true })
       });
-      setNotifications(notifications.map(n =>
-        n.id === id ? { ...n, read: true } : n
-      ));
+      setNotifications(notifications.filter(n => n.id !== id));
     } catch (e) {
       console.error(e);
     }
@@ -82,7 +81,7 @@ export function Header({ onGoToStaff, onGoToRoom, onGoToSignIn, activeTab: exter
   const handleMarkAllAsRead = async () => {
     try {
       await apiFetch(`/notifications/read-all`, { method: 'PATCH' });
-      setNotifications(notifications.map(n => ({ ...n, read: true })));
+      setNotifications([]);
     } catch (e) {
       console.error(e);
     }
