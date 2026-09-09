@@ -15,7 +15,6 @@ import {
   ShieldCheck,
   Archive,
   History,
-  History,
   LogOut,
 } from 'lucide-react';
 import { apiFetch, removeAuthToken, isApprovedStaff, getCurrentUser } from '../api';
@@ -309,16 +308,15 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-3 text-xs font-bold transition-colors cursor-pointer ${
-                activeTab === tab
-                  ? 'text-white border-b-2 border-[#F5A623]'
-                  : 'text-white/60 hover:text-white/90'
-              }`}
+              className={`flex-1 py-3 text-xs font-bold transition-colors cursor-pointer ${activeTab === tab
+                ? 'text-white border-b-2 border-[#F5A623]'
+                : 'text-white/60 hover:text-white/90'
+                }`}
             >
               {tab === 'QUESTIONS' ? t('staff.questions') :
-               tab === 'ROOMS' ? t('staff.rooms') :
-               tab === 'STAFF' ? t('staff.staff') :
-               t('staff.history')}
+                tab === 'ROOMS' ? t('staff.rooms') :
+                  tab === 'STAFF' ? t('staff.staff') :
+                    t('staff.history')}
             </button>
           ))}
         </nav>
@@ -372,19 +370,17 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
                 <button
                   key={tab.id}
                   onClick={() => setStatusFilter(tab.id)}
-                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                    statusFilter === tab.id
-                      ? 'bg-[#2D6DB5] text-white shadow-xs'
-                      : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
-                  }`}
+                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${statusFilter === tab.id
+                    ? 'bg-[#2D6DB5] text-white shadow-xs'
+                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                    }`}
                 >
                   <span>{tab.label}</span>
                   <span
-                    className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                      statusFilter === tab.id
-                        ? 'bg-white/20 text-white'
-                        : 'bg-gray-100 text-gray-600'
-                    }`}
+                    className={`px-1.5 py-0.2 rounded-full text-[10px] ${statusFilter === tab.id
+                      ? 'bg-white/20 text-white'
+                      : 'bg-gray-100 text-gray-600'
+                      }`}
                   >
                     {tab.count}
                   </span>
@@ -396,7 +392,7 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
             {filteredQuestions.length === 0 ? (
               <div className="text-center py-16 bg-white rounded-xl border border-gray-100 shadow-2xs text-gray-400">
                 <p className="font-medium text-gray-600">{t('staff.noQuestions')}</p>
-                <p className="text-sm mt-1">{t('staff.noQuestionsStatus')} "{tabLabel}".</p>
+                <p className="text-sm mt-1">{t('staff.noQuestionsStatus')} "{statusFilter}".</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -458,11 +454,10 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
                                   key={st}
                                   disabled={isUpdatingStatus === question.id}
                                   onClick={() => handleStatusChange(question.id, st)}
-                                  className={`px-3 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${
-                                    isActive
-                                      ? activeClass
-                                      : "text-gray-600 hover:bg-gray-100"
-                                  } disabled:opacity-50`}
+                                  className={`px-3 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${isActive
+                                    ? activeClass
+                                    : "text-gray-600 hover:bg-gray-100"
+                                    } disabled:opacity-50`}
                                 >
                                   {st}
                                 </button>
@@ -549,26 +544,26 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
               <div>
                 <h2 className="font-bold text-gray-900 text-xl flex items-center gap-2">
                   <DoorOpen className="text-[#2D6DB5]" />
-                  {t('staff.rooms.title')}
+                  Staff Discussion Rooms
                 </h2>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  {t('staff.rooms.desc')}
+                  Manage active rooms and view their 6-digit access keys. Share keys with attendees to let them join without logging in.
                 </p>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => fetchRooms()}
                   className="px-3.5 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-none transition-colors cursor-pointer"
-                  title={t('staff.refresh')}
+                  title="Refresh rooms"
                 >
-                  {t('staff.refresh')}
+                  Refresh
                 </button>
                 <button
                   onClick={() => setIsCreateRoomOpen(true)}
                   className="flex items-center gap-1.5 bg-[#F5A623] hover:bg-[#E09612] text-white font-bold px-4 py-2 rounded-none transition-colors text-sm cursor-pointer"
                 >
                   <Plus size={16} />
-                  {t('staff.createRoom')}
+                  CREATE ROOM
                 </button>
               </div>
             </div>
@@ -577,15 +572,15 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
             {rooms.length === 0 ? (
               <div className="text-center py-16 bg-white border border-gray-300 rounded-none text-gray-400">
                 <DoorOpen size={36} className="mx-auto text-gray-300 mb-2" />
-                <p className="font-semibold text-gray-700">{t('staff.noRooms')}</p>
+                <p className="font-semibold text-gray-700">No rooms created yet</p>
                 <p className="text-xs text-gray-400 mt-1 max-w-sm mx-auto">
-                  {t('staff.noRoomsDesc')}
+                  Create a room to start group discussions. A unique 6-digit access key will be generated automatically.
                 </p>
                 <button
                   onClick={() => setIsCreateRoomOpen(true)}
                   className="mt-4 inline-flex items-center gap-1.5 bg-[#2D6DB5] text-white font-bold text-xs px-4 py-2 rounded-none hover:bg-[#235892] transition-colors cursor-pointer"
                 >
-                  <Plus size={14} /> {t('staff.createRoom')}
+                  <Plus size={14} /> Create Room
                 </button>
               </div>
             ) : (
@@ -610,17 +605,16 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
                           </span>
                         )}
                         <span
-                          className={`text-[9px] font-bold px-1.5 py-0.2 rounded-none border ${
-                            room.isActive
-                              ? 'bg-green-50 border-green-200 text-green-700'
-                              : 'bg-gray-50 border-gray-200 text-gray-500'
-                          }`}
+                          className={`text-[9px] font-bold px-1.5 py-0.2 rounded-none border ${room.isActive
+                            ? 'bg-green-50 border-green-200 text-green-700'
+                            : 'bg-gray-50 border-gray-200 text-gray-500'
+                            }`}
                         >
-                          {room.isActive ? t('staff.status.active') : t('staff.status.inactive')}
+                          {room.isActive ? 'ACTIVE' : 'INACTIVE'}
                         </span>
                         {room.createdAt && (
                           <span className="text-[10px] text-gray-400 ml-1">
-                            {t('staff.status.created')} {new Date(room.createdAt).toLocaleDateString()}
+                            Created {new Date(room.createdAt).toLocaleDateString()}
                           </span>
                         )}
                       </div>
@@ -644,7 +638,7 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
                           <KeyRound size={13} className="text-[#E07B2A]" />
                           <div>
                             <span className="text-[9px] uppercase font-bold tracking-wider text-amber-800 block leading-none mb-0.5">
-                              {t('staff.roomKey')}
+                              Room Key
                             </span>
                             <span className="text-sm font-mono font-bold tracking-wider text-gray-900 leading-none">
                               {room.code || '------'}
@@ -656,17 +650,17 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
                           type="button"
                           onClick={() => handleCopyKey(room.code)}
                           className="px-2 py-1 bg-white hover:bg-amber-100 text-amber-900 text-[11px] font-bold border border-amber-300 rounded-none transition-colors flex items-center gap-1 cursor-pointer"
-                          title={t('staff.copyKey')}
+                          title="Copy 6-digit key to share with attendees"
                         >
                           {copiedCode === room.code ? (
                             <>
                               <Check size={11} className="text-emerald-600" />
-                              <span className="text-emerald-700">{t('staff.copied')}</span>
+                              <span className="text-emerald-700">Copied!</span>
                             </>
                           ) : (
                             <>
                               <Copy size={11} />
-                              <span>{t('staff.copyKey')}</span>
+                              <span>Copy Key</span>
                             </>
                           )}
                         </button>
@@ -681,7 +675,7 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
                         }}
                         className="px-3.5 py-1.5 bg-[#2D6DB5] hover:bg-[#245A94] text-white text-xs font-bold rounded-none transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
                       >
-                        <span>{t('staff.enterRoom')}</span>
+                        <span>Enter Room</span>
                         <ExternalLink size={12} />
                       </button>
                     </div>
@@ -697,29 +691,29 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
           <div className="bg-white rounded-xl border border-gray-100 shadow-xs p-6">
             <h2 className="font-bold text-gray-900 text-lg mb-2 flex items-center gap-2">
               <Users className="text-[#2D6DB5]" />
-              {t('staff.staff.title')}
+              Chaplain & Staff Community
             </h2>
             <p className="text-sm text-gray-600 leading-relaxed mb-6">
-              {t('staff.staff.desc')}
+              Welcome to the staff team. Your responsibility is to oversee discussions, approve student questions for public visibility, provide sound theological answers, and maintain fruitful fellowship.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-blue-50/60 border border-blue-100 rounded-xl p-4">
-                <span className="text-xs font-bold text-[#2D6DB5] block mb-1">{t('staff.staff.box1Title')}</span>
+                <span className="text-xs font-bold text-[#2D6DB5] block mb-1">Approved Questions</span>
                 <p className="text-xs text-gray-600">
-                  {t('staff.staff.box1Desc')}
+                  Visible to everyone without requiring login. Use for edifying questions.
                 </p>
               </div>
               <div className="bg-amber-50/60 border border-amber-100 rounded-xl p-4">
-                <span className="text-xs font-bold text-[#E07B2A] block mb-1">{t('staff.staff.box2Title')}</span>
+                <span className="text-xs font-bold text-[#E07B2A] block mb-1">Room Keys</span>
                 <p className="text-xs text-gray-600">
-                  {t('staff.staff.box2Desc')}
+                  Each room has a unique 6-digit key. Share keys with students so they can join freely.
                 </p>
               </div>
               <div className="bg-emerald-50/60 border border-emerald-100 rounded-xl p-4">
-                <span className="text-xs font-bold text-emerald-700 block mb-1">{t('staff.staff.box3Title')}</span>
+                <span className="text-xs font-bold text-emerald-700 block mb-1">Official Answers</span>
                 <p className="text-xs text-gray-600">
-                  {t('staff.staff.box3Desc')}
+                  Submitting an answer automatically updates the status to Answered (Public).
                 </p>
               </div>
             </div>
@@ -732,10 +726,10 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
             <div className="flex items-center justify-between gap-3 mb-4">
               <h2 className="font-bold text-gray-900 text-xl flex items-center gap-2">
                 <History className="text-[#2D6DB5]" />
-                {t('staff.history.title')}
+                Answered & Moderated Archive
               </h2>
               <span className="text-xs text-gray-500 font-medium">
-                {questions.filter((q) => q.status === 'ANSWERED' || q.status === 'APPROVED').length} {t('staff.history.archived')}
+                {questions.filter((q) => q.status === 'ANSWERED' || q.status === 'APPROVED').length} Archived
               </span>
             </div>
 
@@ -758,7 +752,7 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
                     <p className="text-xs text-gray-600 mb-3">{q.content}</p>
                     {q.answers && q.answers.length > 0 && (
                       <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 text-xs text-gray-700">
-                        <span className="font-bold text-[#2D6DB5] block mb-1">{t('staff.history.reply')}</span>
+                        <span className="font-bold text-[#2D6DB5] block mb-1">Reply:</span>
                         {q.answers[q.answers.length - 1].content}
                       </div>
                     )}
@@ -773,7 +767,7 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
       <button
         onClick={() => setIsCreateRoomOpen(true)}
         className="md:hidden fixed bottom-20 right-5 w-12 h-12 bg-[#F5A623] hover:bg-[#E09612] text-white rounded-full shadow-lg flex items-center justify-center transition-colors z-30"
-        aria-label={t('staff.createRoom')}
+        aria-label="Create room"
       >
         <Plus size={24} />
       </button>
@@ -789,7 +783,7 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
           <div className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-none border border-gray-400 sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-md">
             <div className="px-6 pt-5 pb-6">
               <div className="flex items-center justify-between mb-5 border-b border-gray-200 pb-3">
-                <h2 className="text-lg font-bold text-gray-900">{t('staff.modal.createTitle')}</h2>
+                <h2 className="text-lg font-bold text-gray-900">Create Discussion Room</h2>
                 <button
                   onClick={() => setIsCreateRoomOpen(false)}
                   className="text-gray-400 hover:text-gray-600 transition-colors p-1 cursor-pointer"
@@ -802,13 +796,13 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
               {/* Room Name */}
               <div className="mb-4">
                 <label className="block text-xs font-bold uppercase tracking-wider text-[#E07B2A] mb-1.5">
-                  {t('staff.modal.roomName')}
+                  Room Name
                 </label>
                 <input
                   type="text"
                   value={roomName}
                   onChange={(e) => setRoomName(e.target.value)}
-                  placeholder={t('staff.modal.namePlaceholder')}
+                  placeholder="e.g., Weekly Bible Study"
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-none focus:outline-none focus:border-[#2D6DB5] text-gray-700"
                 />
               </div>
@@ -816,7 +810,7 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
               {/* Category */}
               <div className="mb-4">
                 <label className="block text-xs font-bold uppercase tracking-wider text-[#E07B2A] mb-1.5">
-                  {t('staff.modal.category')}
+                  Category
                 </label>
                 <select
                   value={roomCategory}
@@ -834,12 +828,12 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
               {/* Description */}
               <div className="mb-5">
                 <label className="block text-xs font-bold uppercase tracking-wider text-[#E07B2A] mb-1.5">
-                  {t('staff.modal.description')}
+                  Description
                 </label>
                 <textarea
                   value={roomDescription}
                   onChange={(e) => setRoomDescription(e.target.value)}
-                  placeholder={t('staff.modal.descPlaceholder')}
+                  placeholder="What will this room focus on?"
                   rows={3}
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-none resize-none focus:outline-none focus:border-[#2D6DB5] text-gray-700"
                 />
@@ -847,7 +841,7 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
 
               <div className="p-3 bg-amber-50 border border-amber-300 rounded-none mb-4 text-xs text-amber-900 flex items-center gap-2">
                 <KeyRound size={16} className="text-[#E07B2A] flex-shrink-0" />
-                <span>{t('staff.modal.keyNotice')}</span>
+                <span>A random 6-digit Room Key will be generated automatically for attendees.</span>
               </div>
 
               {createRoomError && (
@@ -862,7 +856,7 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
                 disabled={!roomName.trim()}
                 className="w-full bg-[#2D6DB5] hover:bg-[#245A94] disabled:bg-gray-300 text-white font-bold py-2.5 rounded-none transition-colors tracking-wide uppercase text-xs cursor-pointer"
               >
-                {t('staff.modal.createBtn')}
+                Create Room
               </button>
             </div>
           </div>
@@ -876,20 +870,20 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
             <div className="w-12 h-12 bg-amber-100 text-[#E07B2A] rounded-none flex items-center justify-center mx-auto mb-3">
               <KeyRound size={24} />
             </div>
-            <h3 className="font-bold text-gray-900 text-lg mb-1">{t('staff.modal.successTitle')}</h3>
+            <h3 className="font-bold text-gray-900 text-lg mb-1">Room Created Successfully!</h3>
             <p className="text-xs text-gray-500 mb-4">
-              {t('staff.room')}: <strong className="text-gray-800">{newlyCreatedRoom.name}</strong>
+              Room: <strong className="text-gray-800">{newlyCreatedRoom.name}</strong>
             </p>
 
             <div className="bg-amber-50/90 border border-amber-300 rounded-none p-4 mb-4">
               <span className="text-[11px] uppercase font-bold text-amber-800 tracking-wider block mb-1">
-                {t('staff.modal.shareableKey')}
+                Shareable 6-Digit Room Key
               </span>
               <div className="text-3xl font-black font-mono tracking-widest text-gray-900 my-1">
                 {newlyCreatedRoom.code}
               </div>
               <p className="text-[11px] text-gray-600 mt-1">
-                {t('staff.modal.joinNotice')}
+                Attendees and students can join this room without logging in using this 6-digit key.
               </p>
             </div>
 
@@ -899,13 +893,13 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
                 className="flex-1 bg-[#2D6DB5] hover:bg-[#235892] text-white text-xs font-bold py-2.5 px-4 rounded-none flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
               >
                 {copiedCode === newlyCreatedRoom.code ? <Check size={14} /> : <Copy size={14} />}
-                <span>{copiedCode === newlyCreatedRoom.code ? t('staff.copied') : t('staff.copyKey')}</span>
+                <span>{copiedCode === newlyCreatedRoom.code ? 'Copied!' : 'Copy Key'}</span>
               </button>
               <button
                 onClick={() => setNewlyCreatedRoom(null)}
                 className="py-2.5 px-4 text-xs font-semibold text-gray-700 hover:bg-gray-100 rounded-none border border-gray-300 transition-colors cursor-pointer"
               >
-                {t('staff.modal.done')}
+                Done
               </button>
             </div>
           </div>
@@ -918,9 +912,8 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
           <button
             key={label}
             onClick={() => setActiveTab(tab)}
-            className={`flex-1 flex flex-col items-center justify-center py-2.5 gap-0.5 transition-colors cursor-pointer ${
-              activeTab === tab ? 'text-[#2D6DB5]' : 'text-gray-400 hover:text-gray-600'
-            }`}
+            className={`flex-1 flex flex-col items-center justify-center py-2.5 gap-0.5 transition-colors cursor-pointer ${activeTab === tab ? 'text-[#2D6DB5]' : 'text-gray-400 hover:text-gray-600'
+              }`}
           >
             <Icon size={20} />
             <span className="text-[10px] font-medium">{label}</span>
