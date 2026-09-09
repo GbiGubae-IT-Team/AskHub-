@@ -9,6 +9,7 @@ import {
   Bell,
 } from 'lucide-react';
 import { apiFetch, removeAuthToken } from '../api';
+import { useLanguage } from '../context/LanguageContext';
 
 export interface UserResponse {
   id: string;
@@ -26,6 +27,7 @@ interface SuperAdminPageProps {
 
 export function SuperAdminPage({ onBack }: SuperAdminPageProps) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [users, setUsers] = useState<UserResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdatingId, setIsUpdatingId] = useState<string | null>(null);
@@ -91,17 +93,17 @@ export function SuperAdminPage({ onBack }: SuperAdminPageProps) {
           >
             <ArrowLeft size={24} />
           </button>
-          <h1 className="text-white text-xl font-bold flex-1">GIBI-GUBAE SUPER ADMIN</h1>
+          <h1 className="text-white text-xl font-bold flex-1">{t('superadmin.title')}</h1>
           <button
             onClick={() => {
               removeAuthToken();
               navigate('/');
             }}
             className="text-white/80 hover:text-white hover:bg-white/10 px-2.5 py-1.5 rounded transition-colors flex items-center gap-1.5 text-xs font-medium cursor-pointer"
-            title="Sign Out"
+            title={t('superadmin.signOut')}
           >
             <LogOut size={16} />
-            <span className="hidden sm:inline">Sign Out</span>
+            <span className="hidden sm:inline">{t('superadmin.signOut')}</span>
           </button>
         </div>
       </header>
@@ -112,17 +114,17 @@ export function SuperAdminPage({ onBack }: SuperAdminPageProps) {
           <div>
             <h2 className="font-bold text-gray-900 text-2xl flex items-center gap-2">
               <ShieldCheck className="text-[#2D6DB5]" size={28} />
-              Staff Management
+              {t('superadmin.staffManagement')}
             </h2>
             <p className="text-sm text-gray-500 mt-1">
-              Approve, suspend, and manage staff accounts.
+              {t('superadmin.staffDesc')}
             </p>
           </div>
           <button
             onClick={fetchStaff}
             className="px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg shadow-sm transition-colors cursor-pointer"
           >
-            Refresh List
+            {t('superadmin.refresh')}
           </button>
         </div>
 
@@ -133,15 +135,15 @@ export function SuperAdminPage({ onBack }: SuperAdminPageProps) {
               <Bell size={20} />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">Notification Center</h3>
-              <p className="text-sm text-gray-500">Push, edit, and manage all notifications sent to staff or the public.</p>
+              <h3 className="font-semibold text-gray-900">{t('superadmin.notifCenter')}</h3>
+              <p className="text-sm text-gray-500">{t('superadmin.notifDesc')}</p>
             </div>
           </div>
           <button
             onClick={() => navigate('/superadmin/notifications')}
             className="flex-shrink-0 px-5 py-2 bg-[#2D6DB5] hover:bg-[#245A94] text-white text-sm font-medium rounded-lg transition-colors cursor-pointer"
           >
-            Manage Notifications →
+            {t('superadmin.manageNotif')}
           </button>
         </div>
 
@@ -151,32 +153,32 @@ export function SuperAdminPage({ onBack }: SuperAdminPageProps) {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="px-6 py-4 text-xs font-bold text-gray-600 uppercase tracking-wider">Email</th>
-                  <th className="px-6 py-4 text-xs font-bold text-gray-600 uppercase tracking-wider">Role</th>
-                  <th className="px-6 py-4 text-xs font-bold text-gray-600 uppercase tracking-wider">Join Date</th>
-                  <th className="px-6 py-4 text-xs font-bold text-gray-600 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-xs font-bold text-gray-600 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-600 uppercase tracking-wider">{t('superadmin.col.email')}</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-600 uppercase tracking-wider">{t('superadmin.col.role')}</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-600 uppercase tracking-wider">{t('superadmin.col.joinDate')}</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-600 uppercase tracking-wider">{t('superadmin.col.status')}</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-600 uppercase tracking-wider">{t('superadmin.col.actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {isLoading ? (
                   <tr>
                     <td colSpan={5} className="px-6 py-8 text-center text-sm text-gray-500">
-                      Loading staff members...
+                      {t('superadmin.loading')}
                     </td>
                   </tr>
                 ) : users.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-6 py-8 text-center text-sm text-gray-500 flex flex-col items-center justify-center">
                       <Users size={32} className="text-gray-300 mb-2" />
-                      No staff members found.
+                      {t('superadmin.noStaff')}
                     </td>
                   </tr>
                 ) : (
                   users.map((user) => (
                     <tr key={user.id} className="hover:bg-gray-50/50 transition-colors">
                       <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-gray-900">{user.email || 'Anonymous'}</div>
+                        <div className="text-sm font-medium text-gray-900">{user.email || t('superadmin.anonymous')}</div>
                         <div className="text-xs text-gray-400 mt-0.5 font-mono">{user.anonymousId}</div>
                       </td>
                       <td className="px-6 py-4">
@@ -187,7 +189,10 @@ export function SuperAdminPage({ onBack }: SuperAdminPageProps) {
                             ? 'bg-blue-50 text-blue-700 border-blue-200'
                             : 'bg-emerald-50 text-emerald-700 border-emerald-200'
                         }`}>
-                          {user.role}
+                          {user.role === 'SUPER_ADMIN' ? t('superadmin.role.superAdmin') :
+                           user.role === 'ADMIN' ? t('superadmin.role.admin') :
+                           user.role === 'TEACHER' ? t('superadmin.role.teacher') :
+                           user.role}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500">
@@ -203,7 +208,9 @@ export function SuperAdminPage({ onBack }: SuperAdminPageProps) {
                         }`}>
                           {user.staffStatus === 'APPROVED' && <ShieldCheck size={14} />}
                           {user.staffStatus === 'SUSPENDED' && <ShieldAlert size={14} />}
-                          {user.staffStatus || 'PENDING'}
+                          {user.staffStatus === 'APPROVED' ? t('superadmin.status.approved') :
+                           user.staffStatus === 'SUSPENDED' ? t('superadmin.status.suspended') :
+                           t('superadmin.status.pending')}
                         </span>
                       </td>
                       <td className="px-6 py-4">
@@ -213,9 +220,9 @@ export function SuperAdminPage({ onBack }: SuperAdminPageProps) {
                           disabled={isUpdatingId === user.id || user.role === 'SUPER_ADMIN'}
                           className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#F5A623] focus:border-transparent disabled:opacity-50 cursor-pointer"
                         >
-                          <option value="PENDING">Pending</option>
-                          <option value="APPROVED">Approved</option>
-                          <option value="SUSPENDED">Suspended</option>
+                          <option value="PENDING">{t('superadmin.status.pending')}</option>
+                          <option value="APPROVED">{t('superadmin.status.approved')}</option>
+                          <option value="SUSPENDED">{t('superadmin.status.suspended')}</option>
                         </select>
                       </td>
                     </tr>

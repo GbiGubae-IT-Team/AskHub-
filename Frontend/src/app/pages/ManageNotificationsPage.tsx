@@ -16,6 +16,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { apiFetch, removeAuthToken } from '../api';
+import { useLanguage } from '../context/LanguageContext';
 
 interface NotificationItem {
   id: string;
@@ -32,6 +33,7 @@ interface ManageNotificationsPageProps {
 
 export function ManageNotificationsPage({ onBack }: ManageNotificationsPageProps) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   // List state
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -84,11 +86,11 @@ export function ManageNotificationsPage({ onBack }: ManageNotificationsPageProps
     setSendSuccess(false);
 
     if (!notificationTarget) {
-      setSendError('Please select a target audience before sending.');
+      setSendError(t('notif.err.noTarget'));
       return;
     }
     if (notificationContent.trim().length < 10) {
-      setSendError('Notification content must be at least 10 characters long.');
+      setSendError(t('notif.err.tooShort'));
       return;
     }
 
@@ -106,7 +108,7 @@ export function ManageNotificationsPage({ onBack }: ManageNotificationsPageProps
       setSendSuccess(true);
       setTimeout(() => setSendSuccess(false), 3000);
     } catch (e: any) {
-      setSendError(e.message || 'Failed to send notification.');
+      setSendError(e.message || t('notif.err.sendFail'));
     } finally {
       setIsSending(false);
     }
@@ -171,17 +173,17 @@ export function ManageNotificationsPage({ onBack }: ManageNotificationsPageProps
   const targetBadge = (target: string) => {
     if (target === 'PUBLIC') return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
-        <Globe size={10} /> Public
+        <Globe size={10} /> {t('notif.badge.public')}
       </span>
     );
     if (target === 'STAFF') return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">
-        <Users size={10} /> Staff
+        <Users size={10} /> {t('notif.badge.staff')}
       </span>
     );
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-50 text-gray-700 border border-gray-200">
-        User
+        {t('notif.badge.user')}
       </span>
     );
   };
@@ -200,15 +202,15 @@ export function ManageNotificationsPage({ onBack }: ManageNotificationsPageProps
           </button>
           <h1 className="text-white text-xl font-bold flex-1 flex items-center gap-2">
             <Bell size={20} />
-            Manage Notifications
+            {t('notif.title')}
           </h1>
           <button
             onClick={() => { removeAuthToken(); navigate('/'); }}
             className="text-white/80 hover:text-white hover:bg-white/10 px-2.5 py-1.5 rounded transition-colors flex items-center gap-1.5 text-xs font-medium cursor-pointer"
-            title="Sign Out"
+            title={t('superadmin.signOut')}
           >
             <LogOut size={16} />
-            <span className="hidden sm:inline">Sign Out</span>
+            <span className="hidden sm:inline">{t('superadmin.signOut')}</span>
           </button>
         </div>
       </header>
@@ -220,7 +222,7 @@ export function ManageNotificationsPage({ onBack }: ManageNotificationsPageProps
           <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
             <h2 className="font-bold text-lg text-gray-900 flex items-center gap-2">
               <span className="text-[#2D6DB5]">📨</span>
-              Push New Notification
+              {t('notif.pushTitle')}
             </h2>
             <div>
               {sendError && (
@@ -228,7 +230,7 @@ export function ManageNotificationsPage({ onBack }: ManageNotificationsPageProps
               )}
               {sendSuccess && (
                 <span className="text-sm text-emerald-500 font-medium flex items-center gap-1">
-                  <ShieldCheck size={16} /> Notification sent successfully!
+                  <ShieldCheck size={16} /> {t('notif.sendSuccess')}
                 </span>
               )}
             </div>
@@ -242,14 +244,14 @@ export function ManageNotificationsPage({ onBack }: ManageNotificationsPageProps
                   setNotificationContent(e.target.value);
                   setSendError(null);
                 }}
-                placeholder="Type your message here (min. 10 characters)..."
+                placeholder={t('notif.placeholder')}
                 className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2D6DB5] resize-none h-24"
               />
             </div>
             <div className="flex flex-col justify-between w-full md:w-64">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Target Audience <span className="text-red-500">*</span>
+                  {t('notif.target')} <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={notificationTarget}
@@ -259,9 +261,9 @@ export function ManageNotificationsPage({ onBack }: ManageNotificationsPageProps
                   }}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#2D6DB5]"
                 >
-                  <option value="" disabled>Select a target...</option>
-                  <option value="PUBLIC">🌐 Public (All Users)</option>
-                  <option value="STAFF">👥 Staff Only</option>
+                  <option value="" disabled>{t('notif.selectTarget')}</option>
+                  <option value="PUBLIC">{t('notif.publicTarget')}</option>
+                  <option value="STAFF">{t('notif.staffTarget')}</option>
                 </select>
               </div>
               <button
@@ -270,7 +272,7 @@ export function ManageNotificationsPage({ onBack }: ManageNotificationsPageProps
                 className="mt-4 w-full bg-[#2D6DB5] hover:bg-[#245A94] disabled:opacity-50 text-white font-medium py-2 rounded-lg transition-colors text-sm flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Send size={16} />
-                {isSending ? 'Sending...' : 'Send Notification'}
+                {isSending ? t('notif.sending') : t('notif.sendBtn')}
               </button>
             </div>
           </div>
@@ -279,11 +281,11 @@ export function ManageNotificationsPage({ onBack }: ManageNotificationsPageProps
         {/* ── Notifications Table ──────────────────────────────────────────── */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-            <h2 className="font-bold text-gray-900 text-lg">All Notifications</h2>
+            <h2 className="font-bold text-gray-900 text-lg">{t('notif.allTitle')}</h2>
             <button
               onClick={fetchNotifications}
               className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
-              title="Refresh"
+              title={t('superadmin.refresh')}
             >
               <RefreshCw size={16} />
             </button>
@@ -291,12 +293,12 @@ export function ManageNotificationsPage({ onBack }: ManageNotificationsPageProps
 
           {isLoading ? (
             <div className="px-6 py-12 text-center text-sm text-gray-500">
-              Loading notifications...
+              {t('notif.loading')}
             </div>
           ) : notifications.length === 0 ? (
             <div className="px-6 py-12 text-center text-sm text-gray-500">
               <Bell size={32} className="text-gray-300 mx-auto mb-2" />
-              No notifications have been sent yet.
+              {t('notif.empty')}
             </div>
           ) : (
             <div className="divide-y divide-gray-100">
@@ -316,7 +318,7 @@ export function ManageNotificationsPage({ onBack }: ManageNotificationsPageProps
                           ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                           : 'bg-gray-100 text-gray-500 border-gray-200'
                       }`}>
-                        {notif.isActive ? <><Eye size={10} /> Visible</> : <><EyeOff size={10} /> Hidden</>}
+                        {notif.isActive ? <><Eye size={10} /> {t('notif.visible')}</> : <><EyeOff size={10} /> {t('notif.hidden')}</>}
                       </span>
                       <span className="text-xs text-gray-400">
                         {new Date(notif.createdAt).toLocaleString()}
@@ -338,13 +340,13 @@ export function ManageNotificationsPage({ onBack }: ManageNotificationsPageProps
                             disabled={isSavingEdit}
                             className="flex items-center gap-1 px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs rounded-md transition-colors disabled:opacity-50 cursor-pointer"
                           >
-                            <Check size={12} /> Save
+                            <Check size={12} /> {t('notif.save')}
                           </button>
                           <button
                             onClick={cancelEdit}
                             className="flex items-center gap-1 px-3 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs rounded-md transition-colors cursor-pointer"
                           >
-                            <X size={12} /> Cancel
+                            <X size={12} /> {t('notif.cancel')}
                           </button>
                         </div>
                       </div>
@@ -359,7 +361,7 @@ export function ManageNotificationsPage({ onBack }: ManageNotificationsPageProps
                       <button
                         onClick={() => startEdit(notif)}
                         className="p-1.5 text-gray-400 hover:text-[#2D6DB5] hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
-                        title="Edit content"
+                        title={t('notif.editHint')}
                       >
                         <Pencil size={15} />
                       </button>
@@ -371,7 +373,7 @@ export function ManageNotificationsPage({ onBack }: ManageNotificationsPageProps
                             ? 'text-gray-400 hover:text-amber-600 hover:bg-amber-50'
                             : 'text-gray-400 hover:text-emerald-600 hover:bg-emerald-50'
                         }`}
-                        title={notif.isActive ? 'Hide notification' : 'Show notification'}
+                        title={notif.isActive ? t('notif.hideHint') : t('notif.showHint')}
                       >
                         {notif.isActive ? <EyeOff size={15} /> : <Eye size={15} />}
                       </button>
