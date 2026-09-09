@@ -8,6 +8,7 @@ import {
   Send,
 } from 'lucide-react';
 import { apiFetch, getAuthToken } from '../api';
+import { useLanguage } from '../context/LanguageContext';
 
 interface RoomPageProps {
   onBack?: () => void;
@@ -24,6 +25,7 @@ interface RoomPageProps {
 
 export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { roomId } = useParams<{ roomId: string }>();
   const [room, setRoom] = useState<any>(activeRoom || null);
   const [discussions, setDiscussions] = useState<any[]>([]);
@@ -97,7 +99,7 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
         fetchQuestions();
       }
     } catch(err: any) {
-      alert(err.message || "Failed to submit question. Please log in.");
+      alert(err.message || t('rooms.err.submit'));
       console.error(err);
     } finally {
       setIsSubmitting(false);
@@ -121,25 +123,25 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
       setReplyInputs(prev => ({ ...prev, [questionId]: '' }));
       fetchQuestions();
     } catch (err: any) {
-      alert(err.message || "Failed to submit reply.");
+      alert(err.message || t('rooms.err.reply'));
     }
   };
 
   const renderRoomInfo = () => (
     <div className="bg-[#2D6DB5] rounded-lg p-5 text-white">
-      <h3 className="font-bold text-base mb-2">About this Room</h3>
+      <h3 className="font-bold text-base mb-2">{t('rooms.aboutTitle')}</h3>
       <p className="text-white/80 text-sm leading-relaxed mb-4">
-        {room?.description || 'This room is a space for open dialogue. Feel free to ask questions and share your thoughts with the community.'}
+        {room?.description || t('rooms.aboutDesc')}
       </p>
       <div className="flex items-center gap-4 text-xs text-white/70">
         <span className="flex items-center gap-1.5">
           <Users2 size={14} />
-          {room?.members || 1} Students
+          {room?.members || 1} {t('rooms.students')}
         </span>
         {(room?.staffVerified ?? true) && (
           <span className="flex items-center gap-1.5">
             <ShieldCheck size={14} />
-            Staff Verified
+            {t('rooms.staffVerified')}
           </span>
         )}
       </div>
@@ -150,26 +152,26 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
     <div className="bg-white rounded-lg shadow-sm p-5">
       <div className="flex items-center gap-2 mb-4">
         <MessageSquare size={18} className="text-[#2D6DB5]" />
-        <h3 className="font-bold text-gray-900">Ask a Question</h3>
+        <h3 className="font-bold text-gray-900">{t('rooms.askTitle')}</h3>
       </div>
 
       <div className="mb-3">
-        <label className="block text-xs font-semibold text-[#E07B2A] mb-1.5">Subject</label>
+        <label className="block text-xs font-semibold text-[#E07B2A] mb-1.5">{t('rooms.subject')}</label>
         <input
           type="text"
           value={subject}
           onChange={e => setSubject(e.target.value)}
-          placeholder="Briefly state your topic..."
+          placeholder={t('rooms.subjectPlaceholder')}
           className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2D6DB5] focus:border-transparent text-gray-700"
         />
       </div>
 
       <div className="mb-4">
-        <label className="block text-xs font-semibold text-[#E07B2A] mb-1.5">Your Question</label>
+        <label className="block text-xs font-semibold text-[#E07B2A] mb-1.5">{t('rooms.yourQuestion')}</label>
         <textarea
           value={question}
           onChange={e => setQuestion(e.target.value)}
-          placeholder="Share your thoughts or ask for guidance..."
+          placeholder={t('rooms.questionPlaceholder')}
           rows={5}
           className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[#2D6DB5] focus:border-transparent text-gray-700"
         />
@@ -178,12 +180,12 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
       <button
         onClick={handleSubmit}
         disabled={!subject.trim() || !question.trim() || isSubmitting}
-        className="w-full bg-[#F5A623] hover:bg-[#E09612] disabled:bg-gray-200 disabled:text-gray-400 text-white font-bold py-3 rounded-lg transition-colors uppercase tracking-wide text-sm flex items-center justify-center gap-2"
+        className="w-full bg-[#F5A623] hover:bg-[#E09612] disabled:bg-gray-200 disabled:text-gray-400 text-white font-bold py-3 rounded-lg transition-colors uppercase tracking-wide text-sm flex items-center justify-center gap-2 cursor-pointer"
       >
-        {isSubmitting ? 'Submitting...' : 'Submit Question'}
+        {isSubmitting ? t('rooms.submitting') : t('rooms.submitQuestion')}
       </button>
       <p className="text-center text-xs text-gray-400 mt-3">
-        Your post will be visible to all members of this room.
+        {t('rooms.visibleHint')}
       </p>
     </div>
   );
@@ -212,15 +214,15 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
           </span>
         )}
         <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-3">
-          {room?.name || 'The Path to Spiritual Growth'}
+          {room?.name || t('rooms.defaultName')}
         </h2>
         <p className="text-white/85 text-sm md:text-base max-w-xl mx-auto leading-relaxed mb-5">
-          {room?.description || 'A space for students to discuss faith, challenges, and growth in a supportive community.'}
+          {room?.description || t('rooms.defaultDesc')}
         </p>
         <p className="text-white/60 text-xs md:text-sm italic max-w-lg mx-auto leading-relaxed font-light">
-          የሰነፍ መንገድ በዓይኑ የቀናች ናት፤ ጠቢብ ግን ምክርን ይሰማል።
+          {t('rooms.verse').split('መጽሐፈ')[0]}
           <br />
-          <span className="not-italic">መጽሐፈ ምሳሌ 12 ፥ 15</span>
+          <span className="not-italic">መጽሐፈ{t('rooms.verse').split('መጽሐፈ')[1]}</span>
         </p>
       </section>
 
@@ -231,23 +233,23 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
           {/* Left — Active Discussions */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-[#2D6DB5] text-base">Active Discussions</h3>
+              <h3 className="font-bold text-[#2D6DB5] text-base">{t('rooms.activeTitle')}</h3>
               <span className="bg-gray-100 text-gray-600 text-xs font-semibold px-3 py-1 rounded-full">
-                {discussions.length} Active
+                {discussions.length} {t('rooms.activeBadge')}
               </span>
             </div>
 
             <div className="space-y-4">
               {discussions.length === 0 ? (
                  <div className="bg-white rounded-lg shadow-sm p-10 text-center text-gray-400">
-                    No discussions found in this room yet. Be the first to ask!
+                    {t('rooms.empty')}
                  </div>
               ) : discussions.map(d => (
                 <div key={d.id} className="bg-white rounded-lg shadow-sm px-6 py-4 hover:shadow-md transition-shadow">
                   <div className="flex flex-wrap gap-2 items-center justify-between mb-2">
                     <div>
                       <span className="text-xs font-semibold text-[#2D6DB5]">
-                        {typeof d.author === 'object' ? (d.author?.anonymousId || d.author?.name || 'Anonymous') : (d.author || 'Anonymous')}
+                        {typeof d.author === 'object' ? (d.author?.anonymousId || d.author?.name || t('rooms.anonymous')) : (d.author || t('rooms.anonymous'))}
                       </span>
                       <span className="text-xs text-gray-400 ml-2">
                         {d.timeAgo || (d.createdAt ? new Date(d.createdAt).toLocaleDateString() : '')}
@@ -260,18 +262,18 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
                         ? 'bg-blue-100 text-blue-700'
                         : 'bg-orange-100 text-orange-600'
                     }`}>
-                      {d.status}
+                      {d.status === "ANSWERED" ? t('rooms.status.answered') : d.status === "APPROVED" ? t('rooms.status.approved') : t('rooms.status.pending')}
                     </span>
                   </div>
 
-                  <h4 className="font-bold text-gray-900 mb-1.5 leading-snug">{d.title || 'Discussion'}</h4>
+                  <h4 className="font-bold text-gray-900 mb-1.5 leading-snug">{d.title || t('rooms.discussion')}</h4>
                   <p className="text-sm text-gray-600 leading-relaxed mb-3 whitespace-pre-wrap">{d.content}</p>
 
                   {d.answers && d.answers.length > 0 && (
                     <div className="mt-4 space-y-2">
                       {d.answers.map((ans: any, idx: number) => (
                         <div key={idx} className="bg-gray-50 border border-gray-100 rounded-md p-3 text-sm text-gray-700">
-                          <span className="font-bold text-[#2D6DB5] block mb-1 text-xs">Official Reply:</span>
+                          <span className="font-bold text-[#2D6DB5] block mb-1 text-xs">{t('rooms.officialReply')}</span>
                           <p className="whitespace-pre-wrap leading-relaxed">{ans.content}</p>
                         </div>
                       ))}
@@ -285,7 +287,7 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
                           type="text"
                           value={replyInputs[d.id] || ''}
                           onChange={(e) => setReplyInputs(prev => ({ ...prev, [d.id]: e.target.value }))}
-                          placeholder="Write an official reply..."
+                          placeholder={t('rooms.replyPlaceholder')}
                           className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2D6DB5] text-gray-700"
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') handleReplySubmit(d.id);
@@ -295,7 +297,7 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
                       <button
                         onClick={() => handleReplySubmit(d.id)}
                         disabled={!replyInputs[d.id]?.trim()}
-                        className="bg-[#2D6DB5] hover:bg-[#235892] disabled:bg-gray-300 text-white px-3 py-2 rounded-md transition-colors"
+                        className="bg-[#2D6DB5] hover:bg-[#235892] disabled:bg-gray-300 text-white px-3 py-2 rounded-md transition-colors cursor-pointer"
                       >
                         <Send size={16} />
                       </button>

@@ -1,4 +1,5 @@
 import { X } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 interface Notification {
   id: string;
@@ -22,6 +23,7 @@ export function NotificationModal({
   onMarkAsRead,
   onMarkAllAsRead
 }: NotificationModalProps) {
+  const { t } = useLanguage();
   if (!isOpen) return null;
 
   const isGuest = !onMarkAsRead;
@@ -38,14 +40,14 @@ export function NotificationModal({
       <div className="fixed top-16 right-4 left-4 sm:left-auto w-auto sm:w-full sm:max-w-sm bg-white rounded-lg shadow-2xl z-50 max-h-[500px] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h2 className="font-bold text-lg">Notifications</h2>
+          <h2 className="font-bold text-lg">{t('notification.title')}</h2>
           <div className="flex items-center gap-2">
             {!isGuest && notifications.some(n => !n.read) && (
               <button
                 onClick={onMarkAllAsRead}
                 className="text-xs text-[#2D6DB5] hover:underline"
               >
-                Mark all as read
+                {t('notification.markAllRead')}
               </button>
             )}
             <button
@@ -62,7 +64,7 @@ export function NotificationModal({
         {isGuest && notifications.length > 0 && (
           <div className="px-4 py-2 bg-amber-50 border-b border-amber-100">
             <p className="text-xs text-amber-700">
-              Sign in to track which announcements you've read.
+              {t('notification.guestNotice')}
             </p>
           </div>
         )}
@@ -71,7 +73,7 @@ export function NotificationModal({
         <div className="flex-1 overflow-y-auto">
           {notifications.length === 0 ? (
             <div className="p-8 text-center text-gray-500">
-              <p className="text-sm">No notifications yet</p>
+              <p className="text-sm">{t('notification.empty')}</p>
             </div>
           ) : (
             <div>
@@ -105,7 +107,7 @@ export function NotificationModal({
         {notifications.length > 0 && (
           <div className="p-3 border-t border-gray-200 text-center">
             <button className="text-sm text-[#2D6DB5] hover:underline font-medium">
-              View all notifications
+              {t('notification.viewAll')}
             </button>
           </div>
         )}

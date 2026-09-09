@@ -12,9 +12,11 @@ import { RoomPage } from './pages/RoomPage';
 import { AuthPage } from './pages/AuthPage';
 import { JoinRoomsModal, Room } from './components/JoinRoomsModal';
 import { apiFetch, getAuthToken, getCurrentUser, removeAuthToken } from './api';
+import { LanguageProvider, useLanguage } from './context/LanguageContext';
 
 function HomePage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [activeCategory, setActiveCategory] = useState('All');
   const [joinedRoomIds, setJoinedRoomIds] = useState<Set<string | number>>(new Set());
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
@@ -43,14 +45,18 @@ function HomePage() {
 
   const handleJoinRoom = async (room: Room, code?: string) => {
     try {
-      if (!joinedRoomIds.has(room.id)) {
+      // If a code is explicitly provided, always validate it via API.
+      // Otherwise, only call API if it's a new room.
+      if (!joinedRoomIds.has(room.id) || code) {
         await apiFetch(`/rooms/${room.id}/join`, {
           method: "POST",
           body: JSON.stringify({ code }),
         });
-        const newJoined = new Set(joinedRoomIds).add(room.id);
-        setJoinedRoomIds(newJoined);
-        localStorage.setItem('joinedRooms', JSON.stringify(Array.from(newJoined)));
+        if (!joinedRoomIds.has(room.id)) {
+          const newJoined = new Set(joinedRoomIds).add(room.id);
+          setJoinedRoomIds(newJoined);
+          localStorage.setItem('joinedRooms', JSON.stringify(Array.from(newJoined)));
+        }
       }
       setIsRoomModalOpen(false);
       navigate(`/rooms/${room.id}`);
@@ -116,7 +122,7 @@ function HomePage() {
           className="fixed bottom-6 right-6 z-40 flex items-center gap-2 bg-[#2D6DB5] hover:bg-[#245A94] text-white font-bold px-5 py-3 rounded-full shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer"
         >
           <DoorOpen size={18} />
-          <span className="text-sm">Join Rooms</span>
+          <span className="text-sm">{t('rooms.joinRoomsBtn')}</span>
           {rooms.filter(r => !joinedRoomIds.has(r.id)).length > 0 && (
             <span className="bg-[#F5A623] text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
               {rooms.filter(r => !joinedRoomIds.has(r.id)).length}
@@ -232,7 +238,7 @@ function ProtectedSuperAdminRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-export default function App() {
+function App() {
   const navigate = useNavigate();
 
   return (
@@ -274,5 +280,13 @@ export default function App() {
       <Route path="/room/:roomId" element={<RoomPage onBack={() => navigate('/')} />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+  );
+}
+
+export default function AppWithProviders() {
+  return (
+    <LanguageProvider>
+      <App />
+    </LanguageProvider>
   );
 }

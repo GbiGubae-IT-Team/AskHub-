@@ -2,16 +2,15 @@ import { useState, useMemo } from 'react';
 import { Calendar } from 'lucide-react';
 import { getTodaysMezmur } from '../utils/ethiopianCalendar';
 import { getSaintImageUrl } from '../utils/saintImages';
+import { useLanguage } from '../context/LanguageContext';
 
 export function Sidebar() {
+  const { t } = useLanguage();
   const [isExpanded, setIsExpanded] = useState(false);
   
-  // Calculate today's Ethiopian date and corresponding mezmur once per render
   const { ethDate, mezmur } = useMemo(() => getTodaysMezmur(), []);
-
   const imageUrl = getSaintImageUrl(mezmur.picture);
 
-  // Combine all lines for expanded view, or pick the first line for collapsed view
   const allLines = mezmur.song.flatMap(verse => verse.lines);
   const previewText = allLines.length > 0 ? allLines[0] : '';
   const fullText = allLines.join('\n\n');
@@ -41,7 +40,7 @@ export function Sidebar() {
           </div>
         ) : (
           <div className="w-full aspect-square mb-5 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400">
-            No Image Available
+            {t('sidebar.noImage')}
           </div>
         )}
 
@@ -65,7 +64,7 @@ export function Sidebar() {
             onClick={() => setIsExpanded(!isExpanded)}
             className="mt-3 text-[#2D6DB5] text-sm font-bold hover:text-[#1a4f8a] hover:underline w-full text-center py-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#2D6DB5]/20 active:scale-95"
           >
-            {isExpanded ? 'LESS' : 'MORE'}
+            {isExpanded ? t('sidebar.less') : t('sidebar.more')}
           </button>
         )}
       </div>
