@@ -12,6 +12,7 @@ import { RoomPage } from './pages/RoomPage';
 import { AuthPage } from './pages/AuthPage';
 import { JoinRoomsModal, Room } from './components/JoinRoomsModal';
 import { apiFetch, getAuthToken, getCurrentUser, removeAuthToken } from './api';
+import { LanguageProvider } from './context/LanguageContext';
 
 function HomePage() {
   const navigate = useNavigate();
@@ -274,5 +275,13 @@ export default function App() {
       <Route path="/room/:roomId" element={<RoomPage onBack={() => navigate('/')} />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+  );
+}
+
+export default function AppWithProviders() {
+  return (
+    <LanguageProvider>
+      <App />
+    </LanguageProvider>
   );
 }

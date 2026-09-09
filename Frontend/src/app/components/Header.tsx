@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Menu, X, Bell } from 'lucide-react';
+import { Menu, X, Bell, Languages } from 'lucide-react';
 import { SignInModal } from './SignInModal';
 import { NotificationModal } from './NotificationModal';
 import { SuccessModal } from './SuccessModal';
 import { apiFetch, getAuthToken } from '../api';
 import { useEffect } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 
 interface HeaderProps {
   onGoToStaff?: () => void;
@@ -17,7 +18,8 @@ interface HeaderProps {
 
 export function Header({ onGoToStaff, onGoToRoom, onGoToSignIn, activeTab: externalTab, onTabChange }: HeaderProps) {
   const navigate = useNavigate();
-  const [internalTab, setInternalTab] = useState('All');
+  const { language, toggleLanguage, t } = useLanguage();
+  const [internalTab, setInternalTab] = useState(t('tab.all'));
   const activeTab = externalTab !== undefined ? externalTab : internalTab;
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
@@ -27,6 +29,16 @@ export function Header({ onGoToStaff, onGoToRoom, onGoToSignIn, activeTab: exter
   const [questionText, setQuestionText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
+
+  const tabs = [
+    { key: 'All', label: t('tab.all') },
+    { key: 'Faith', label: t('tab.faith') },
+    { key: 'Bible', label: t('tab.bible') },
+    { key: 'Prayer', label: t('tab.prayer') },
+    { key: 'Relationships', label: t('tab.relationships') },
+    { key: 'Struggles', label: t('tab.struggles') },
+    { key: 'General', label: t('tab.general') },
+  ];
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -46,19 +58,17 @@ export function Header({ onGoToStaff, onGoToRoom, onGoToSignIn, activeTab: exter
       }
     };
     fetchNotifications();
-    // Poll every 30s
     const interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  const tabs = ['All', 'Faith', 'Bible', 'Prayer', 'Relationships', 'Struggles', 'General'];
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  const handleTabClick = (tab: string) => {
-    if (onTabChange) onTabChange(tab);
-    else setInternalTab(tab);
+  const handleTabClick = (key: string) => {
+    if (onTabChange) onTabChange(key);
+    else setInternalTab(key);
     setIsDrawerOpen(false);
-    if (tab === 'Rooms') onGoToRoom?.();
+    if (key === 'Rooms') onGoToRoom?.();
   };
 
   const handleStaffSignIn = () => {
@@ -89,7 +99,6 @@ export function Header({ onGoToStaff, onGoToRoom, onGoToSignIn, activeTab: exter
 
   const handleAskQuestion = async () => {
     if (!questionText.trim()) return;
-    
 
     try {
       setIsSubmitting(true);
@@ -106,6 +115,17 @@ export function Header({ onGoToStaff, onGoToRoom, onGoToSignIn, activeTab: exter
       setIsSubmitting(false);
     }
   };
+
+  const LanguageToggle = () => (
+    <button
+      onClick={toggleLanguage}
+      title={language === 'en' ? 'Switch to Amharic' : 'ወደ እንግሊዝኛ ቀይር'}
+      className="relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all duration-200 border border-white/20 hover:border-white/40 cursor-pointer"
+    >
+      <Languages size={15} />
+      <span className="tracking-wide">{language === 'en' ? 'አማ' : 'EN'}</span>
+    </button>
+  );
 
   return (
     <>
@@ -124,28 +144,31 @@ export function Header({ onGoToStaff, onGoToRoom, onGoToSignIn, activeTab: exter
             </button>
 
             <h1 className="text-white text-2xl font-bold whitespace-nowrap flex-1">
-              GIBI-GUBAE
+              {t('header.title')}
             </h1>
 
-            {/* Notification Icon - Mobile */}
-            <button
-              onClick={() => setIsNotificationModalOpen(true)}
-              className="md:hidden relative p-1 text-white"
-              aria-label="Notifications"
-            >
-              <Bell size={24} />
-              {unreadCount > 0 && (
-                <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 rounded-full text-xs font-bold flex items-center justify-center text-white">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
+            {/* Mobile right-side icons */}
+            <div className="md:hidden flex items-center gap-2">
+              <LanguageToggle />
+              <button
+                onClick={() => setIsNotificationModalOpen(true)}
+                className="relative p-1 text-white"
+                aria-label={t('header.notifications')}
+              >
+                <Bell size={24} />
+                {unreadCount > 0 && (
+                  <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 rounded-full text-xs font-bold flex items-center justify-center text-white">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+            </div>
 
             {/* Search box on desktop - inline with title */}
             <div className="hidden md:flex flex-1 gap-2 items-center">
               <input
                 type="text"
-                placeholder="Ask us anything"
+                placeholder={t('header.placeholder')}
                 value={questionText}
                 onChange={(e) => setQuestionText(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAskQuestion()}
@@ -156,13 +179,17 @@ export function Header({ onGoToStaff, onGoToRoom, onGoToSignIn, activeTab: exter
                 disabled={isSubmitting}
                 className="bg-[#F5A623] hover:bg-[#E09612] text-white font-bold px-6 py-2 rounded transition-colors disabled:opacity-50"
               >
-                {isSubmitting ? '...' : 'GO'}
+                {isSubmitting ? '...' : t('header.go')}
               </button>
+
+              {/* Language Toggle */}
+              <LanguageToggle />
+
               {/* Notification Icon */}
               <button
                 onClick={() => setIsNotificationModalOpen(true)}
                 className="relative p-2 text-white hover:bg-white/10 rounded-full transition-colors"
-                aria-label="Notifications"
+                aria-label={t('header.notifications')}
               >
                 <Bell size={20} />
                 {unreadCount > 0 && (
@@ -187,7 +214,7 @@ export function Header({ onGoToStaff, onGoToRoom, onGoToSignIn, activeTab: exter
                 }}
                 className="bg-white/10 hover:bg-white/20 text-white font-medium px-4 py-2 rounded transition-colors text-sm whitespace-nowrap cursor-pointer"
               >
-                Staff Sign In
+                {t('header.staffSignIn')}
               </button>
             </div>
           </div>
@@ -196,7 +223,7 @@ export function Header({ onGoToStaff, onGoToRoom, onGoToSignIn, activeTab: exter
           <div className="flex md:hidden gap-2">
             <input
               type="text"
-              placeholder="Ask us anything"
+              placeholder={t('header.placeholder')}
               value={questionText}
               onChange={(e) => setQuestionText(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAskQuestion()}
@@ -207,7 +234,7 @@ export function Header({ onGoToStaff, onGoToRoom, onGoToSignIn, activeTab: exter
               disabled={isSubmitting}
               className="bg-[#F5A623] hover:bg-[#E09612] text-white font-bold px-6 py-2 rounded transition-colors disabled:opacity-50"
             >
-              {isSubmitting ? '...' : 'GO'}
+              {isSubmitting ? '...' : t('header.go')}
             </button>
           </div>
         </div>
@@ -217,15 +244,15 @@ export function Header({ onGoToStaff, onGoToRoom, onGoToSignIn, activeTab: exter
           <div className="flex min-w-max px-2">
             {tabs.map((tab) => (
               <button
-                key={tab}
-                onClick={() => handleTabClick(tab)}
+                key={tab.key}
+                onClick={() => handleTabClick(tab.key)}
                 className={`px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors ${
-                  activeTab === tab
+                  activeTab === tab.key
                     ? 'text-white border-b-2 border-white'
                     : 'text-white/80 hover:text-white'
                 }`}
               >
-                {tab.toUpperCase()}
+                {tab.label.toUpperCase()}
               </button>
             ))}
           </div>
@@ -259,15 +286,15 @@ export function Header({ onGoToStaff, onGoToRoom, onGoToSignIn, activeTab: exter
         <nav className="py-2 flex-1 overflow-y-auto">
           {tabs.map((tab) => (
             <button
-              key={tab}
-              onClick={() => handleTabClick(tab)}
+              key={tab.key}
+              onClick={() => handleTabClick(tab.key)}
               className={`w-full text-left px-6 py-4 transition-colors ${
-                activeTab === tab
+                activeTab === tab.key
                   ? 'bg-white/20 text-white font-medium border-l-4 border-white'
                   : 'text-white/80 hover:bg-white/10 hover:text-white'
               }`}
             >
-              {tab.toUpperCase()}
+              {tab.label.toUpperCase()}
             </button>
           ))}
         </nav>
@@ -277,7 +304,7 @@ export function Header({ onGoToStaff, onGoToRoom, onGoToSignIn, activeTab: exter
             onClick={handleStaffSignIn}
             className="w-full bg-white/10 hover:bg-white/20 text-white font-medium py-3 rounded transition-colors text-sm"
           >
-            Staff Sign In
+            {t('header.staffSignIn')}
           </button>
         </div>
       </div>
@@ -314,9 +341,9 @@ export function Header({ onGoToStaff, onGoToRoom, onGoToSignIn, activeTab: exter
       />
 
       {/* Success Modal */}
-      <SuccessModal 
-        isOpen={isSuccessModalOpen} 
-        onClose={() => setIsSuccessModalOpen(false)} 
+      <SuccessModal
+        isOpen={isSuccessModalOpen}
+        onClose={() => setIsSuccessModalOpen(false)}
       />
     </>
   );
