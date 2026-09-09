@@ -87,7 +87,7 @@ export function JoinRoomsModal({ rooms, joinedIds, isOpen, onClose, onJoin }: Jo
     setIsSubmitting(true);
     setErrorMsg('');
     
-    for (const r of available) {
+    for (const r of rooms) {
       try {
         await onJoin(r, code);
         setDirectCode('');

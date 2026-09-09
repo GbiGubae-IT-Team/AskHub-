@@ -45,14 +45,18 @@ function HomePage() {
 
   const handleJoinRoom = async (room: Room, code?: string) => {
     try {
-      if (!joinedRoomIds.has(room.id)) {
+      // If a code is explicitly provided, always validate it via API.
+      // Otherwise, only call API if it's a new room.
+      if (!joinedRoomIds.has(room.id) || code) {
         await apiFetch(`/rooms/${room.id}/join`, {
           method: "POST",
           body: JSON.stringify({ code }),
         });
-        const newJoined = new Set(joinedRoomIds).add(room.id);
-        setJoinedRoomIds(newJoined);
-        localStorage.setItem('joinedRooms', JSON.stringify(Array.from(newJoined)));
+        if (!joinedRoomIds.has(room.id)) {
+          const newJoined = new Set(joinedRoomIds).add(room.id);
+          setJoinedRoomIds(newJoined);
+          localStorage.setItem('joinedRooms', JSON.stringify(Array.from(newJoined)));
+        }
       }
       setIsRoomModalOpen(false);
       navigate(`/rooms/${room.id}`);
