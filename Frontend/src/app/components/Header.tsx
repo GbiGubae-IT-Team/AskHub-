@@ -319,12 +319,12 @@ export function Header({ onGoToStaff, onGoToRoom, onGoToSignIn, activeTab: exter
       <SignInModal
         isOpen={isStaffSignInModalOpen}
         onClose={() => setIsStaffSignInModalOpen(false)}
-        subtitle="Staff Login"
+        subtitle={t('signin.notice.approvalTitle')}
         noticeIcon="ℹ️"
-        noticeTitle="Admin Approval Required"
-        noticeMessage="New staff login requires admin approval. You will be notified once your account is approved."
+        noticeTitle={t('signin.notice.approvalTitle')}
+        noticeMessage={t('signin.notice.approvalBody')}
         showGuestOption={false}
-        submitButtonText="Request Access"
+        submitButtonText={t('signin.requestAccess')}
         onSubmit={() => {
           setIsStaffSignInModalOpen(false);
           onGoToStaff?.();
