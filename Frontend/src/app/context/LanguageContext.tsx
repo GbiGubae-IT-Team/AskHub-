@@ -101,8 +101,8 @@ const translations: Record<Language, Record<string, string>> = {
     'hotquestions.general': 'ጠቅላላ',
     // Success Modal
     'success.title': 'ጥያቄዎ ደርሷል!',
-    'success.body': 'ስለ አቀረቡልን እናመሰግናለን። ጥያቄዎን ከመልሱ ጋር እንደተዘጋጀ እናስቀምጣለን።',
-    'success.button': 'ገባኝ፣ አመሰግናለሁ!',
+    'success.body': 'ጥያቄዎን ስለ አቀረቡ እናመሰግናለን። ጥያቄዎን ከመልሱ ጋር እንደተዘጋጀ እናስቀምጣለን።',
+    'success.button': 'እሺ',
     // Sign In Modal
     'signin.guestContinue': 'እንደ እንግዳ ቀጥል',
     'signin.submit': 'ግባ',

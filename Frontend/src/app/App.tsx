@@ -233,7 +233,7 @@ function ProtectedSuperAdminRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-export default function App() {
+function App() {
   const navigate = useNavigate();
 
   return (
