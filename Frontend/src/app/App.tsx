@@ -12,10 +12,11 @@ import { RoomPage } from './pages/RoomPage';
 import { AuthPage } from './pages/AuthPage';
 import { JoinRoomsModal, Room } from './components/JoinRoomsModal';
 import { apiFetch, getAuthToken, getCurrentUser, removeAuthToken } from './api';
-import { LanguageProvider } from './context/LanguageContext';
+import { LanguageProvider, useLanguage } from './context/LanguageContext';
 
 function HomePage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [activeCategory, setActiveCategory] = useState('All');
   const [joinedRoomIds, setJoinedRoomIds] = useState<Set<string | number>>(new Set());
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
@@ -117,7 +118,7 @@ function HomePage() {
           className="fixed bottom-6 right-6 z-40 flex items-center gap-2 bg-[#2D6DB5] hover:bg-[#245A94] text-white font-bold px-5 py-3 rounded-full shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer"
         >
           <DoorOpen size={18} />
-          <span className="text-sm">Join Rooms</span>
+          <span className="text-sm">{t('rooms.joinRoomsBtn')}</span>
           {rooms.filter(r => !joinedRoomIds.has(r.id)).length > 0 && (
             <span className="bg-[#F5A623] text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
               {rooms.filter(r => !joinedRoomIds.has(r.id)).length}

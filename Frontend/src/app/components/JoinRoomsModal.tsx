@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X, Users2, ShieldCheck, DoorOpen, KeyRound, ArrowLeft, Loader2 } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export interface Room {
   id: string | number;
@@ -20,6 +21,7 @@ interface JoinRoomsModalProps {
 }
 
 export function JoinRoomsModal({ rooms, joinedIds, isOpen, onClose, onJoin }: JoinRoomsModalProps) {
+  const { t } = useLanguage();
   const [targetRoom, setTargetRoom] = useState<Room | null>(null);
   const [passcode, setPasscode] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
@@ -48,7 +50,7 @@ export function JoinRoomsModal({ rooms, joinedIds, isOpen, onClose, onJoin }: Jo
   const handleSubmitPasscode = async () => {
     if (!targetRoom) return;
     if (passcode.trim().length !== 6) {
-      setErrorMsg('Please enter a valid 6-digit room key');
+      setErrorMsg(t('roomsModal.err.validKey'));
       return;
     }
 
@@ -59,7 +61,7 @@ export function JoinRoomsModal({ rooms, joinedIds, isOpen, onClose, onJoin }: Jo
       setTargetRoom(null);
       setPasscode('');
     } catch (err: any) {
-      setErrorMsg(err?.message || 'Invalid 6-digit room key. Please check with your staff.');
+      setErrorMsg(err?.message || t('roomsModal.err.invalidKey'));
     } finally {
       setIsSubmitting(false);
     }
@@ -68,7 +70,7 @@ export function JoinRoomsModal({ rooms, joinedIds, isOpen, onClose, onJoin }: Jo
   const handleDirectCodeSubmit = async () => {
     const code = directCode.trim();
     if (code.length !== 6) {
-      setErrorMsg('Please enter a 6-digit key');
+      setErrorMsg(t('roomsModal.err.enterKey'));
       return;
     }
 
@@ -97,7 +99,7 @@ export function JoinRoomsModal({ rooms, joinedIds, isOpen, onClose, onJoin }: Jo
     }
     
     setIsSubmitting(false);
-    setErrorMsg('No active room found with this code.');
+    setErrorMsg(t('roomsModal.err.notFound'));
   };
 
   return (
@@ -119,7 +121,7 @@ export function JoinRoomsModal({ rooms, joinedIds, isOpen, onClose, onJoin }: Jo
               <button
                 onClick={handleCancelPasscode}
                 className="text-gray-400 hover:text-gray-700 p-1 -ml-1 transition-colors"
-                title="Back to rooms list"
+                title={t('roomsModal.backHint')}
               >
                 <ArrowLeft size={18} />
               </button>
@@ -127,11 +129,11 @@ export function JoinRoomsModal({ rooms, joinedIds, isOpen, onClose, onJoin }: Jo
               <DoorOpen size={20} className="text-[#2D6DB5]" />
             )}
             <h2 className="font-bold text-gray-900 text-base">
-              {targetRoom ? 'Enter Room Key' : 'Active Rooms'}
+              {targetRoom ? t('roomsModal.titleEnter') : t('roomsModal.titleActive')}
             </h2>
             {!targetRoom && available.length > 0 && (
               <span className="bg-[#F5A623] text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                {available.length} new
+                {available.length} {t('roomsModal.new')}
               </span>
             )}
           </div>
@@ -147,7 +149,7 @@ export function JoinRoomsModal({ rooms, joinedIds, isOpen, onClose, onJoin }: Jo
             <div>
               <div className="bg-blue-50/70 border border-blue-100/80 rounded-xl p-4 mb-5">
                 <span className="text-[11px] font-semibold text-[#2D6DB5] uppercase tracking-wider block mb-1">
-                  Joining Room
+                  {t('roomsModal.joiningRoom')}
                 </span>
                 <h3 className="font-bold text-gray-900 text-base mb-1">{targetRoom.name}</h3>
                 {targetRoom.description && (
@@ -158,10 +160,10 @@ export function JoinRoomsModal({ rooms, joinedIds, isOpen, onClose, onJoin }: Jo
               <div className="mb-4">
                 <label className="block text-xs font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
                   <KeyRound size={14} className="text-[#E07B2A]" />
-                  Enter 6-Digit Room Key
+                  {t('roomsModal.enterKey')}
                 </label>
                 <p className="text-xs text-gray-500 mb-3">
-                  Ask your teacher or staff for the 6-digit key. No login or account required!
+                  {t('roomsModal.askKey')}
                 </p>
 
                 <input
@@ -195,7 +197,7 @@ export function JoinRoomsModal({ rooms, joinedIds, isOpen, onClose, onJoin }: Jo
                 disabled={isSubmitting}
                 className="flex-1 py-2.5 px-4 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                Cancel
+                {t('roomsModal.cancel')}
               </button>
               <button
                 type="button"
@@ -206,10 +208,10 @@ export function JoinRoomsModal({ rooms, joinedIds, isOpen, onClose, onJoin }: Jo
                 {isSubmitting ? (
                   <>
                     <Loader2 size={14} className="animate-spin" />
-                    <span>Verifying...</span>
+                    <span>{t('roomsModal.verifying')}</span>
                   </>
                 ) : (
-                  <span>Verify & Join</span>
+                  <span>{t('roomsModal.verifyJoin')}</span>
                 )}
               </button>
             </div>
@@ -221,7 +223,7 @@ export function JoinRoomsModal({ rooms, joinedIds, isOpen, onClose, onJoin }: Jo
             <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 mb-3">
               <span className="text-[11px] font-semibold text-gray-700 block mb-1.5 flex items-center gap-1.5">
                 <KeyRound size={13} className="text-[#2D6DB5]" />
-                Have a 6-digit Room Key?
+                {t('roomsModal.haveKey')}
               </span>
               <div className="flex gap-2">
                 <input
@@ -231,16 +233,16 @@ export function JoinRoomsModal({ rooms, joinedIds, isOpen, onClose, onJoin }: Jo
                   maxLength={6}
                   value={directCode}
                   onChange={(e) => setDirectCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  placeholder="e.g. 849201"
+                  placeholder={t('roomsModal.eg')}
                   className="flex-1 text-xs py-1.5 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#2D6DB5] tracking-wider text-gray-800"
                 />
                 <button
                   type="button"
                   onClick={handleDirectCodeSubmit}
                   disabled={directCode.trim().length !== 6}
-                  className="bg-[#2D6DB5] hover:bg-[#235892] disabled:bg-gray-300 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+                  className="bg-[#2D6DB5] hover:bg-[#235892] disabled:bg-gray-300 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
                 >
-                  Join
+                  {t('roomsModal.join')}
                 </button>
               </div>
               {errorMsg && (
@@ -260,12 +262,12 @@ export function JoinRoomsModal({ rooms, joinedIds, isOpen, onClose, onJoin }: Jo
                     <div className="flex items-center gap-3 text-xs text-gray-400">
                       <span className="flex items-center gap-1">
                         <Users2 size={12} />
-                        {room.members || 0} members
+                        {room.members || 0} {t('roomsModal.members')}
                       </span>
                       {room.staffVerified && (
                         <span className="flex items-center gap-1 text-[#2D6DB5]">
                           <ShieldCheck size={12} />
-                          Staff verified
+                          {t('roomsModal.staffVerified')}
                         </span>
                       )}
                     </div>
@@ -276,7 +278,7 @@ export function JoinRoomsModal({ rooms, joinedIds, isOpen, onClose, onJoin }: Jo
                     className="flex-shrink-0 bg-[#2D6DB5] hover:bg-[#245A94] text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors whitespace-nowrap shadow-2xs cursor-pointer flex items-center gap-1"
                   >
                     <KeyRound size={12} />
-                    JOIN
+                    {t('roomsModal.joinUpper')}
                   </button>
                 </div>
                 {room.category && (
@@ -291,7 +293,7 @@ export function JoinRoomsModal({ rooms, joinedIds, isOpen, onClose, onJoin }: Jo
             {joined.length > 0 && (
               <>
                 {available.length > 0 && (
-                  <p className="text-xs text-gray-400 font-medium pt-2 pb-0.5">Already joined</p>
+                  <p className="text-xs text-gray-400 font-medium pt-2 pb-0.5">{t('roomsModal.alreadyJoinedTitle')}</p>
                 )}
                 {joined.map(room => (
                   <div
@@ -305,12 +307,12 @@ export function JoinRoomsModal({ rooms, joinedIds, isOpen, onClose, onJoin }: Jo
                         <div className="flex items-center gap-3 text-xs text-gray-400">
                           <span className="flex items-center gap-1">
                             <Users2 size={12} />
-                            {room.members || 0} members
+                            {room.members || 0} {t('roomsModal.members')}
                           </span>
                         </div>
                       </div>
                       <span className="flex-shrink-0 bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-lg">
-                        Joined ✓
+                        {t('roomsModal.joinedMark')}
                       </span>
                     </div>
                   </div>
@@ -319,7 +321,7 @@ export function JoinRoomsModal({ rooms, joinedIds, isOpen, onClose, onJoin }: Jo
             )}
 
             {rooms.length === 0 && (
-              <p className="text-center text-sm text-gray-400 py-8">No active rooms at the moment.</p>
+              <p className="text-center text-sm text-gray-400 py-8">{t('roomsModal.noRooms')}</p>
             )}
           </div>
         )}
