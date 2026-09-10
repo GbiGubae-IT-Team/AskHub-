@@ -121,7 +121,7 @@ export const mezmur = [
     },
     {
         "id": 2,
-        "saint": "ቅዱስ ታድዮስ",
+        "saint": "ቅዱስ ታዴዎስ ሐዋርያ",
         "title": "ሰአሉ ለነ",
         "picture": "2 Kidus Thaddeus.png",
         "song": stadqan_semaetat,
