@@ -120,7 +120,7 @@ function HomePage() {
           {/* Top Section */}
           <div className="flex flex-col md:flex-row justify-between items-center mb-8">
             <div className="text-2xl font-bold flex items-center gap-3">
-              <img src="/icon.png" alt="AskHub Logo" className="w-8 h-8 object-contain" />
+              <img src="/icon.png" alt="AskHub Logo" className="opacity-70 w-16 h-16 object-contain" />
               {t('footer.title1')}
             </div>
             <div className="flex gap-3 mt-4 md:mt-0">
@@ -135,9 +135,9 @@ function HomePage() {
               </a>
             </div>
           </div>
-          
+
           <div className="w-full h-px bg-white/10 mb-8"></div>
-          
+
           {/* Middle Section */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             <div>
@@ -172,9 +172,9 @@ function HomePage() {
               </ul>
             </div>
           </div>
-          
+
           <div className="w-full h-px bg-white/10 mb-6"></div>
-          
+
           {/* Bottom Section */}
           <div className="flex flex-col md:flex-row justify-between items-center text-xs text-white/50">
             <p>Copyright © {new Date().getFullYear()} {t('footer.title1')}. All rights reserved.</p>
