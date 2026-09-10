@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router';
-import { DoorOpen, ShieldAlert, LogIn, ArrowLeft } from 'lucide-react';
+import { DoorOpen, ShieldAlert, LogIn, ArrowLeft, MapPin, Mail, Phone, Globe, Youtube, Send } from 'lucide-react';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { QuestionCard } from './components/QuestionCard';
@@ -114,6 +114,76 @@ function HomePage() {
           <HotQuestions />
         </div>
       </main>
+
+      <footer className="bg-[#1a4f8a] text-white pt-10 pb-6 mt-auto">
+        <div className="max-w-[1600px] mx-auto px-6">
+          {/* Top Section */}
+          <div className="flex flex-col md:flex-row justify-between items-center mb-8">
+            <div className="text-2xl font-bold flex items-center gap-3">
+              <img src="/icon.png" alt="AskHub Logo" className="w-8 h-8 object-contain" />
+              {t('footer.title1')}
+            </div>
+            <div className="flex gap-3 mt-4 md:mt-0">
+              <a href="https://t.me/SidistKiloGibiGubae" target="_blank" rel="noreferrer" className="w-9 h-9 rounded-full bg-white/10 hover:bg-[#0088cc] flex items-center justify-center transition-colors">
+                <Send size={16} className="-ml-0.5" />
+              </a>
+              <a href="https://www.youtube.com/@6kilogbigubae" target="_blank" rel="noreferrer" className="w-9 h-9 rounded-full bg-white/10 hover:bg-[#ff0000] flex items-center justify-center transition-colors">
+                <Youtube size={16} />
+              </a>
+              <a href="https://6kilogbigubae.vercel.app/" target="_blank" rel="noreferrer" className="w-9 h-9 rounded-full bg-white/10 hover:bg-[#F5A623] flex items-center justify-center transition-colors">
+                <Globe size={16} />
+              </a>
+            </div>
+          </div>
+          
+          <div className="w-full h-px bg-white/10 mb-8"></div>
+          
+          {/* Middle Section */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+            <div>
+              <h4 className="text-base font-semibold mb-4 text-white/90">{t('footer.title1')}</h4>
+              <ul className="space-y-3">
+                <li className="flex items-start gap-2">
+                  <MapPin size={16} className="text-[#E07B2A] mt-1 flex-shrink-0" />
+                  <span className="text-sm text-white/70 leading-relaxed whitespace-pre-wrap">{t('footer.locTitle')}</span>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-base font-semibold mb-4 text-white/90">{t('footer.title2')}</h4>
+              <ul className="space-y-3">
+                <li className="flex items-center gap-2">
+                  <Mail size={16} className="text-[#E07B2A] flex-shrink-0" />
+                  <a href="mailto:kilogbigubae@gmail.com" className="text-sm text-white/70 hover:text-white transition-colors">kilogbigubae@gmail.com</a>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Phone size={16} className="text-[#E07B2A] flex-shrink-0" />
+                  <span className="text-sm text-white/70">+251 96 909 1028</span>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-base font-semibold mb-4 text-white/90">{t('footer.title3')}</h4>
+              <ul className="space-y-3">
+                <li className="flex flex-col gap-1 text-sm text-white/70">
+                  <span>{t('footer.headAdmin')}</span>
+                  <span className="font-semibold text-white">+251 951 21 911</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="w-full h-px bg-white/10 mb-6"></div>
+          
+          {/* Bottom Section */}
+          <div className="flex flex-col md:flex-row justify-between items-center text-xs text-white/50">
+            <p>Copyright © {new Date().getFullYear()} {t('footer.title1')}. All rights reserved.</p>
+            <div className="flex gap-4 mt-4 md:mt-0">
+              <span className="uppercase tracking-wider font-semibold text-white/40">{t('footer.builtBy')}</span>
+            </div>
+          </div>
+        </div>
+      </footer>
 
       {/* Floating Join Rooms button */}
       {rooms.length > 0 && (

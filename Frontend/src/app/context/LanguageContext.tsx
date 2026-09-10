@@ -279,6 +279,13 @@ const translations: Record<Language, Record<string, string>> = {
     'rooms.status.approved': 'APPROVED',
     'rooms.status.pending': 'PENDING',
     'rooms.joinRoomsBtn': 'Join Rooms',
+    // Footer
+    'footer.title1': '6 Kilo Gibi Gubae',
+    'footer.locTitle': 'Addis Ababa 6 Kilo\nSt. Mark\'s Cathedral Behind',
+    'footer.title2': 'Contact Information',
+    'footer.title3': 'Administration',
+    'footer.headAdmin': 'Head Administrator',
+    'footer.builtBy': 'Developed by Gibi Gubae IT TEAM',
   },
   am: {
     // Header
@@ -548,6 +555,13 @@ const translations: Record<Language, Record<string, string>> = {
     'rooms.status.approved': 'የጸደቀ',
     'rooms.status.pending': 'በመጠባበቅ ላይ',
     'rooms.joinRoomsBtn': 'ክፍሎችን ተቀላቀሉ',
+    // Footer
+    'footer.title1': '6 ኪሎ ግቢ ጉባኤ',
+    'footer.locTitle': 'አዲስ አበባ 6 ኪሎ\nቅዱስ ማርቆስ ቤተክርስቲያን ጀርባ',
+    'footer.title2': 'የመገናኛ መረጃ',
+    'footer.title3': 'አስተዳደር',
+    'footer.headAdmin': 'ዋና አስተዳዳሪ',
+    'footer.builtBy': 'በግቢ ጉባኤ IT ቡድን የተሰራ',
   },
 };
 
