@@ -35,6 +35,8 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
   const [replyInputs, setReplyInputs] = useState<Record<string, string>>({});
   const [isReplyingId, setIsReplyingId] = useState<string | null>(null);
   const [isTogglingRoom, setIsTogglingRoom] = useState(false);
+  const [questionError, setQuestionError] = useState<string | null>(null);
+  const [replyErrors, setReplyErrors] = useState<Record<string, string>>({});
 
   const handleBack = () => {
     if (onBack) onBack();
@@ -81,6 +83,11 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
 
   const handleSubmit = async () => {
     if (!subject.trim() || !question.trim() || !currentRoomId) return;
+    if (question.trim().length < 5) {
+      setQuestionError("Question must be at least 5 characters long.");
+      return;
+    }
+    setQuestionError(null);
     try {
       setIsSubmitting(true);
       const res = await apiFetch("/questions", {
@@ -111,6 +118,11 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
   const handleReplySubmit = async (questionId: string) => {
     const content = replyInputs[questionId];
     if (!content?.trim() || isReplyingId) return;
+    if (content.trim().length < 5) {
+      setReplyErrors(prev => ({ ...prev, [questionId]: "Reply must be at least 5 characters long." }));
+      return;
+    }
+    setReplyErrors(prev => ({ ...prev, [questionId]: "" }));
     setIsReplyingId(questionId);
 
     try {
@@ -205,11 +217,15 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
         <label className="block text-xs font-semibold text-[#E07B2A] mb-1.5">{t('rooms.yourQuestion')}</label>
         <textarea
           value={question}
-          onChange={e => setQuestion(e.target.value)}
+          onChange={e => {
+            setQuestion(e.target.value);
+            if (questionError) setQuestionError(null);
+          }}
           placeholder={t('rooms.questionPlaceholder')}
           rows={5}
-          className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[#2D6DB5] focus:border-transparent text-gray-700"
+          className={`w-full px-3 py-2.5 text-sm border rounded-lg resize-none focus:outline-none focus:ring-2 focus:border-transparent text-gray-700 ${questionError ? 'border-red-400 focus:ring-red-400' : 'border-gray-300 focus:ring-[#2D6DB5]'}`}
         />
+        {questionError && <p className="text-red-500 text-xs mt-1">{questionError}</p>}
       </div>
 
       <button
@@ -322,18 +338,22 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
                   )}
 
                   {isStaff && (
-                    <div className="mt-4 pt-3 border-t border-gray-100 flex items-end gap-2">
-                      <div className="flex-1">
+                    <div className="mt-4 pt-3 border-t border-gray-100 flex items-start gap-2">
+                      <div className="flex-1 flex flex-col">
                         <input
                           type="text"
                           value={replyInputs[d.id] || ''}
-                          onChange={(e) => setReplyInputs(prev => ({ ...prev, [d.id]: e.target.value }))}
+                          onChange={(e) => {
+                            setReplyInputs(prev => ({ ...prev, [d.id]: e.target.value }));
+                            if (replyErrors[d.id]) setReplyErrors(prev => ({ ...prev, [d.id]: "" }));
+                          }}
                           placeholder={t('rooms.replyPlaceholder')}
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2D6DB5] text-gray-700"
+                          className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 text-gray-700 ${replyErrors[d.id] ? 'border-red-400 focus:ring-red-400' : 'border-gray-300 focus:ring-[#2D6DB5]'}`}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') handleReplySubmit(d.id);
                           }}
                         />
+                        {replyErrors[d.id] && <p className="text-red-500 text-[10px] mt-1">{replyErrors[d.id]}</p>}
                       </div>
                       <button
                         onClick={() => handleReplySubmit(d.id)}
