@@ -53,3 +53,6 @@ export const assertCanAssignRole = (
 
 export const isPrivilegedRole = (role: UserRole) =>
   role === UserRole.ADMIN || role === UserRole.SUPER_ADMIN;
+
+export const isStaffRole = (role: UserRole) =>
+  role === UserRole.TEACHER || role === UserRole.ADMIN || role === UserRole.SUPER_ADMIN;

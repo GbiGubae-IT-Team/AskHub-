@@ -1,5 +1,5 @@
 import { hasPermission } from "../../../core/constants/permissions.js";
-import { isPrivilegedRole } from "../../../core/constants/roleHierarchy.js";
+import { isPrivilegedRole, isStaffRole } from "../../../core/constants/roleHierarchy.js";
 import { BadRequestError } from "../../../core/errors/BadRequestError.js";
 import { ForbiddenError } from "../../../core/errors/ForbiddenError.js";
 import { NotFoundError } from "../../../core/errors/NotFoundError.js";
@@ -69,8 +69,8 @@ export const listRoomsService = async (
   const { page, limit, type, includeInactive } =
     roomValidationService.validateListQuery(query);
 
-  if (includeInactive && (!actor || !isPrivilegedRole(actor.role))) {
-    throw new ForbiddenError("Only admins can list inactive rooms");
+  if (includeInactive && (!actor || !isStaffRole(actor.role))) {
+    throw new ForbiddenError("Only staff can list inactive rooms");
   }
 
   const skip = (page - 1) * limit;
@@ -95,7 +95,7 @@ export const getRoomByIdService = async (
   id: string,
   actor?: JwtPayload,
 ): Promise<RoomResponse> => {
-  const includeInactive = actor ? isPrivilegedRole(actor.role) : false;
+  const includeInactive = actor ? isStaffRole(actor.role) : false;
   const room = await roomRepository.findById(id, includeInactive);
 
   if (!room) {
@@ -110,7 +110,7 @@ export const updateRoomService = async (
   body: unknown,
   actor: JwtPayload,
 ): Promise<RoomResponse> => {
-  const includeInactive = isPrivilegedRole(actor.role);
+  const includeInactive = isStaffRole(actor.role);
   const existing = await roomRepository.findById(id, includeInactive);
 
   if (!existing) {
@@ -119,17 +119,17 @@ export const updateRoomService = async (
 
   const dto = roomValidationService.validateUpdate(body);
   const isCreator = existing.createdById === actor.userId;
-  const actorIsPrivileged = isPrivilegedRole(actor.role);
+  const actorIsStaff = isStaffRole(actor.role);
 
-  if (!isCreator && !actorIsPrivileged) {
+  if (!isCreator && !actorIsStaff) {
     throw new ForbiddenError("You can only update rooms you created");
   }
 
-  if (dto.isActive !== undefined && !actorIsPrivileged) {
-    throw new ForbiddenError("Only admins can change room active status");
+  if (dto.isActive !== undefined && !actorIsStaff) {
+    throw new ForbiddenError("Only staff can change room active status");
   }
 
-  if (!existing.isActive && !actorIsPrivileged) {
+  if (!existing.isActive && !actorIsStaff) {
     throw new BadRequestError("Cannot update a deactivated room");
   }
 
@@ -137,7 +137,7 @@ export const updateRoomService = async (
     ...(dto.name !== undefined && { name: dto.name }),
     ...(dto.type !== undefined && { type: dto.type }),
     ...(dto.isActive !== undefined &&
-      actorIsPrivileged && { isActive: dto.isActive }),
+      actorIsStaff && { isActive: dto.isActive }),
   });
 
   return toRoomResponse(room, actor);
