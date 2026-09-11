@@ -198,14 +198,20 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
   };
 
   const [isAnsweringQuestionId, setIsAnsweringQuestionId] = useState<string | null>(null);
+  const [replyErrors, setReplyErrors] = useState<Record<string, string>>({});
 
   const handleSubmitAnswer = async (id: string) => {
     const q = questions.find((x) => x.id === id);
-    if (!q || !(q.answer || '').trim() || isAnsweringQuestionId) return;
-    const answerContent = q.answer.trim();
+    if (!q || isAnsweringQuestionId) return;
+    const answerContent = (q.answer || '').trim();
+    if (answerContent.length < 5) {
+      setReplyErrors((prev) => ({ ...prev, [id]: "Answer must be at least 5 characters long." }));
+      return;
+    }
+    setReplyErrors((prev) => ({ ...prev, [id]: "" }));
     setIsAnsweringQuestionId(id);
     try {
-      await apiFetch("/answers", {
+      const res = await apiFetch("/answers", {
         method: "POST",
         body: JSON.stringify({ content: answerContent, questionId: id }),
       });
@@ -224,13 +230,14 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
             answer: '',
             answers: [
               ...currentAnswers,
-              { id: 'new', content: answerContent, createdAt: new Date().toISOString() },
+              res?.data ? res.data : { id: 'new', content: answerContent, createdAt: new Date().toISOString() },
             ],
           };
         })
       );
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      alert(err.message || "Failed to submit answer");
     } finally {
       setIsAnsweringQuestionId(null);
     }
@@ -238,6 +245,7 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
 
   const [editingAnswerId, setEditingAnswerId] = useState<string | null>(null);
   const [editingAnswerContent, setEditingAnswerContent] = useState('');
+  const [editingAnswerError, setEditingAnswerError] = useState<string | null>(null);
   const [isSavingAnswerId, setIsSavingAnswerId] = useState<string | null>(null);
   const [isDeletingAnswerId, setIsDeletingAnswerId] = useState<string | null>(null);
   const [activeActionsId, setActiveActionsId] = useState<string | null>(null);
@@ -258,9 +266,9 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
           };
         })
       );
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert("Failed to delete reply");
+      alert(err.message || "Failed to delete reply");
     } finally {
       setIsDeletingAnswerId(null);
       setDeletingAnswerInfo(null);
@@ -270,10 +278,16 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
   const handleEditAnswerStart = (answerId: string, currentContent: string) => {
     setEditingAnswerId(answerId);
     setEditingAnswerContent(currentContent);
+    setEditingAnswerError(null);
   };
 
   const handleEditAnswerSave = async (questionId: string, answerId: string) => {
-    if (!editingAnswerContent.trim() || isSavingAnswerId) return;
+    if (isSavingAnswerId) return;
+    if (editingAnswerContent.trim().length < 5) {
+      setEditingAnswerError("Answer must be at least 5 characters long.");
+      return;
+    }
+    setEditingAnswerError(null);
     setIsSavingAnswerId(answerId);
     try {
       await apiFetch(`/answers/${answerId}`, {
@@ -292,9 +306,9 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
         })
       );
       setEditingAnswerId(null);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert("Failed to update reply");
+      alert(err.message || "Failed to update reply");
     } finally {
       setIsSavingAnswerId(null);
     }
@@ -584,10 +598,16 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
                                   <div className="flex flex-col gap-2">
                                     <textarea
                                       value={editingAnswerContent}
-                                      onChange={(e) => setEditingAnswerContent(e.target.value)}
-                                      className="w-full px-2 py-1.5 text-xs border border-blue-200 rounded focus:outline-none focus:border-blue-400 bg-white resize-none"
+                                      onChange={(e) => {
+                                        setEditingAnswerContent(e.target.value);
+                                        if (editingAnswerError) setEditingAnswerError(null);
+                                      }}
+                                      className={`w-full px-2 py-1.5 text-xs border rounded focus:outline-none bg-white resize-none ${editingAnswerError ? 'border-red-400 focus:border-red-500' : 'border-blue-200 focus:border-blue-400'}`}
                                       rows={3}
                                     />
+                                    {editingAnswerError && (
+                                      <p className="text-red-500 text-[10px] mt-[-4px]">{editingAnswerError}</p>
+                                    )}
                                     <div className="flex justify-end gap-2">
                                       <button
                                         onClick={() => setEditingAnswerId(null)}
@@ -684,11 +704,17 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
                         </label>
                         <textarea
                           value={question.answer || ''}
-                          onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                          onChange={(e) => {
+                            setQuestions(qs => qs.map(x => x.id === question.id ? { ...x, answer: e.target.value } : x));
+                            if (replyErrors[question.id]) setReplyErrors(prev => ({ ...prev, [question.id]: "" }));
+                          }}
                           placeholder={t('staff.placeholder')}
-                          rows={2}
-                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg resize-y focus:outline-none focus:ring-2 focus:ring-[#2D6DB5] focus:border-transparent text-gray-800 bg-white"
+                          rows={3}
+                          className={`w-full px-3 py-2 text-sm border rounded-lg resize-none focus:outline-none focus:ring-1 ${replyErrors[question.id] ? 'border-red-400 focus:ring-red-400 focus:border-red-400' : 'border-gray-200 focus:ring-[#2D6DB5] focus:border-[#2D6DB5]'} text-gray-700`}
                         />
+                        {replyErrors[question.id] && (
+                          <p className="text-red-500 text-[11px] mt-1">{replyErrors[question.id]}</p>
+                        )}
                         <div className="flex justify-end mt-2">
                           <button
                             onClick={() => handleSubmitAnswer(question.id)}
