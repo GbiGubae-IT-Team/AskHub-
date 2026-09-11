@@ -10,6 +10,7 @@ export interface Room {
   category?: string | null;
   staffVerified?: boolean;
   code?: string | null;
+  isActive?: boolean;
 }
 
 interface JoinRoomsModalProps {
@@ -32,8 +33,9 @@ export function JoinRoomsModal({ rooms, joinedIds, isOpen, onClose, onJoin }: Jo
 
   if (!isOpen) return null;
 
-  const available = rooms.filter(r => !joinedIds.has(r.id));
-  const joined = rooms.filter(r => joinedIds.has(r.id));
+  const activeRooms = rooms.filter(r => r.isActive !== false);
+  const available = activeRooms.filter(r => !joinedIds.has(r.id));
+  const joined = activeRooms.filter(r => joinedIds.has(r.id));
 
   const handleStartJoin = (room: Room) => {
     setTargetRoom(room);

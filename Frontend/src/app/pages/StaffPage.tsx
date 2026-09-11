@@ -16,6 +16,10 @@ import {
   Archive,
   History,
   LogOut,
+  Edit2,
+  Trash2,
+  Save,
+  Send,
 } from 'lucide-react';
 import { apiFetch, removeAuthToken, isApprovedStaff, getCurrentUser } from '../api';
 import { useLanguage } from '../context/LanguageContext';
@@ -102,7 +106,7 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
 
   const fetchRooms = async () => {
     try {
-      const res = await apiFetch("/rooms");
+      const res = await apiFetch("/rooms?includeInactive=true");
       setRooms(res?.data?.items || []);
     } catch (err) {
       console.error("Failed to load rooms:", err);
@@ -122,9 +126,11 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
   };
 
   const [createRoomError, setCreateRoomError] = useState<string | null>(null);
+  const [isCreatingRoom, setIsCreatingRoom] = useState(false);
 
   const handleCreateRoom = async () => {
-    if (!roomName.trim()) return;
+    if (!roomName.trim() || isCreatingRoom) return;
+    setIsCreatingRoom(true);
     setCreateRoomError(null);
     try {
       const res = await apiFetch("/rooms", {
@@ -149,6 +155,8 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
     } catch (err: any) {
       console.error("Failed to create room:", err);
       setCreateRoomError(err.message || "Failed to create room. You may lack permission.");
+    } finally {
+      setIsCreatingRoom(false);
     }
   };
 
@@ -189,10 +197,13 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
     }
   };
 
+  const [isAnsweringQuestionId, setIsAnsweringQuestionId] = useState<string | null>(null);
+
   const handleSubmitAnswer = async (id: string) => {
     const q = questions.find((x) => x.id === id);
-    if (!q || !(q.answer || '').trim()) return;
+    if (!q || !(q.answer || '').trim() || isAnsweringQuestionId) return;
     const answerContent = q.answer.trim();
+    setIsAnsweringQuestionId(id);
     try {
       await apiFetch("/answers", {
         method: "POST",
@@ -220,6 +231,72 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
       );
     } catch (err) {
       console.error(err);
+    } finally {
+      setIsAnsweringQuestionId(null);
+    }
+  };
+
+  const [editingAnswerId, setEditingAnswerId] = useState<string | null>(null);
+  const [editingAnswerContent, setEditingAnswerContent] = useState('');
+  const [isSavingAnswerId, setIsSavingAnswerId] = useState<string | null>(null);
+  const [isDeletingAnswerId, setIsDeletingAnswerId] = useState<string | null>(null);
+  const [activeActionsId, setActiveActionsId] = useState<string | null>(null);
+  const [deletingAnswerInfo, setDeletingAnswerInfo] = useState<{ questionId: string; answerId: string } | null>(null);
+
+  const confirmDeleteAnswer = async () => {
+    if (!deletingAnswerInfo) return;
+    const { questionId, answerId } = deletingAnswerInfo;
+    setIsDeletingAnswerId(answerId);
+    try {
+      await apiFetch(`/answers/${answerId}`, { method: "DELETE" });
+      setQuestions((qs) =>
+        qs.map((q) => {
+          if (q.id !== questionId) return q;
+          return {
+            ...q,
+            answers: q.answers?.filter((a) => a.id !== answerId) || [],
+          };
+        })
+      );
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete reply");
+    } finally {
+      setIsDeletingAnswerId(null);
+      setDeletingAnswerInfo(null);
+    }
+  };
+
+  const handleEditAnswerStart = (answerId: string, currentContent: string) => {
+    setEditingAnswerId(answerId);
+    setEditingAnswerContent(currentContent);
+  };
+
+  const handleEditAnswerSave = async (questionId: string, answerId: string) => {
+    if (!editingAnswerContent.trim() || isSavingAnswerId) return;
+    setIsSavingAnswerId(answerId);
+    try {
+      await apiFetch(`/answers/${answerId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ content: editingAnswerContent.trim() }),
+      });
+      setQuestions((qs) =>
+        qs.map((q) => {
+          if (q.id !== questionId) return q;
+          return {
+            ...q,
+            answers: q.answers?.map((a) =>
+              a.id === answerId ? { ...a, content: editingAnswerContent.trim() } : a
+            ) || [],
+          };
+        })
+      );
+      setEditingAnswerId(null);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update reply");
+    } finally {
+      setIsSavingAnswerId(null);
     }
   };
 
@@ -498,14 +575,105 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
                           <div className="space-y-2">
                             {question.answers.map((ans, idx) => (
                               <div
-                                key={idx}
-                                className="bg-blue-50/50 rounded-lg p-3 border border-blue-100/60 text-xs text-gray-700"
+                                key={ans.id || idx}
+                                onClick={() => setActiveActionsId(activeActionsId === ans.id ? null : ans.id)}
+                                onDoubleClick={() => handleEditAnswerStart(ans.id, ans.content)}
+                                className="group relative bg-blue-50/50 rounded-lg p-3 border border-blue-100/60 text-xs text-gray-700 transition-colors"
                               >
-                                <p className="whitespace-pre-wrap leading-relaxed">{ans.content}</p>
+                                {editingAnswerId === ans.id ? (
+                                  <div className="flex flex-col gap-2">
+                                    <textarea
+                                      value={editingAnswerContent}
+                                      onChange={(e) => setEditingAnswerContent(e.target.value)}
+                                      className="w-full px-2 py-1.5 text-xs border border-blue-200 rounded focus:outline-none focus:border-blue-400 bg-white resize-none"
+                                      rows={3}
+                                    />
+                                    <div className="flex justify-end gap-2">
+                                      <button
+                                        onClick={() => setEditingAnswerId(null)}
+                                        className="text-gray-500 hover:text-gray-700 px-2 py-1 transition-colors cursor-pointer"
+                                      >
+                                        Cancel
+                                      </button>
+                                      <button
+                                        onClick={() => handleEditAnswerSave(question.id, ans.id)}
+                                        disabled={isSavingAnswerId === ans.id}
+                                        className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white px-3 py-1 rounded flex items-center gap-1 transition-colors cursor-pointer"
+                                      >
+                                        <Save size={12} />
+                                        Save
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <p className="whitespace-pre-wrap leading-relaxed pr-10">{ans.content}</p>
+                                    <div className={`absolute top-2 right-2 transition-opacity flex items-center gap-1.5 ${activeActionsId === ans.id ? 'opacity-100' : 'opacity-0 md:group-hover:opacity-100'}`}>
+                                      <button
+                                        onClick={(e) => { e.stopPropagation(); handleEditAnswerStart(ans.id, ans.content); }}
+                                        className="p-2 md:p-1.5 text-blue-500 hover:bg-blue-100 rounded-full transition-colors cursor-pointer"
+                                        title="Edit"
+                                      >
+                                        <Edit2 size={12} />
+                                      </button>
+                                      <button
+                                        onClick={(e) => { e.stopPropagation(); setDeletingAnswerInfo({ questionId: question.id, answerId: ans.id }); }}
+                                        disabled={isDeletingAnswerId === ans.id}
+                                        className="p-2 md:p-1.5 text-red-500 hover:bg-red-100 disabled:opacity-50 rounded-full transition-colors cursor-pointer"
+                                        title="Delete"
+                                      >
+                                        <Trash2 size={12} />
+                                      </button>
+                                    </div>
+                                  </>
+                                )}
                               </div>
                             ))}
                           </div>
                         </div>
+                      )}
+
+                      {/* Delete Answer Confirmation Modal */}
+                      {deletingAnswerInfo && deletingAnswerInfo.questionId === question.id && (
+                        <>
+                          <div
+                            className="fixed inset-0 bg-black/50 z-50"
+                            onClick={() => setDeletingAnswerInfo(null)}
+                          />
+
+                          <div className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-none border border-gray-400 sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-sm">
+                            <div className="px-6 pt-5 pb-6">
+                              <div className="flex items-center justify-between mb-5 border-b border-gray-200 pb-3">
+                                <h2 className="text-lg font-bold text-gray-900">Confirm Deletion</h2>
+                                <button
+                                  onClick={() => setDeletingAnswerInfo(null)}
+                                  className="text-gray-400 hover:text-gray-600 transition-colors p-1 cursor-pointer"
+                                  aria-label="Close"
+                                >
+                                  <X size={20} />
+                                </button>
+                              </div>
+                              <p className="text-sm text-gray-700 mb-6">
+                                Are you sure you want to delete this reply? This action cannot be undone.
+                              </p>
+                              <div className="flex gap-3">
+                                <button
+                                  onClick={() => setDeletingAnswerInfo(null)}
+                                  className="flex-1 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold py-2 rounded-none transition-colors tracking-wide uppercase text-xs cursor-pointer"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  onClick={confirmDeleteAnswer}
+                                  disabled={isDeletingAnswerId === deletingAnswerInfo.answerId}
+                                  className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white font-bold py-2 rounded-none transition-colors tracking-wide uppercase text-xs cursor-pointer"
+                                >
+                                  {isDeletingAnswerId === deletingAnswerInfo.answerId ? 'Deleting...' : 'Delete'}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </>
                       )}
 
                       {/* Write Response Box */}
@@ -524,10 +692,10 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
                         <div className="flex justify-end mt-2">
                           <button
                             onClick={() => handleSubmitAnswer(question.id)}
-                            disabled={!(question.answer || '').trim()}
+                            disabled={!(question.answer || '').trim() || isAnsweringQuestionId === question.id}
                             className="bg-[#2D6DB5] hover:bg-[#235892] disabled:bg-gray-200 disabled:text-gray-400 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors uppercase tracking-wider cursor-pointer shadow-2xs"
                           >
-                            {t('staff.submitAnswer')}
+                            {isAnsweringQuestionId === question.id ? t('staff.submitAnswer') + '...' : t('staff.submitAnswer')}
                           </button>
                         </div>
                       </div>
@@ -856,10 +1024,10 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
               {/* Submit */}
               <button
                 onClick={handleCreateRoom}
-                disabled={!roomName.trim()}
+                disabled={!roomName.trim() || isCreatingRoom}
                 className="w-full bg-[#2D6DB5] hover:bg-[#245A94] disabled:bg-gray-300 text-white font-bold py-2.5 rounded-none transition-colors tracking-wide uppercase text-xs cursor-pointer"
               >
-                {t('staff.modal.createBtn')}
+                {isCreatingRoom ? t('staff.modal.createBtn') + '...' : t('staff.modal.createBtn')}
               </button>
             </div>
           </div>
