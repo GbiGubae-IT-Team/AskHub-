@@ -106,7 +106,7 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
 
   const fetchRooms = async () => {
     try {
-      const res = await apiFetch("/rooms");
+      const res = await apiFetch("/rooms?includeInactive=true");
       setRooms(res?.data?.items || []);
     } catch (err) {
       console.error("Failed to load rooms:", err);

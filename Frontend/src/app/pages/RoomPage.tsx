@@ -83,24 +83,24 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
     if (!subject.trim() || !question.trim() || !currentRoomId) return;
     try {
       setIsSubmitting(true);
-      const res = await apiFetch("/questions", { 
-        method: "POST", 
-        body: JSON.stringify({ 
-          title: subject, 
-          content: question, 
+      const res = await apiFetch("/questions", {
+        method: "POST",
+        body: JSON.stringify({
+          title: subject,
+          content: question,
           isAnonymous: true,
           roomId: currentRoomId
-        }) 
+        })
       });
       setSubject('');
       setQuestion('');
-      
+
       if (res?.data) {
         setDiscussions(prev => [res.data, ...prev]);
       } else {
         fetchQuestions();
       }
-    } catch(err: any) {
+    } catch (err: any) {
       alert(err.message || t('rooms.err.submit'));
       console.error(err);
     } finally {
@@ -112,7 +112,7 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
     const content = replyInputs[questionId];
     if (!content?.trim() || isReplyingId) return;
     setIsReplyingId(questionId);
-    
+
     try {
       await apiFetch("/answers", {
         method: "POST",
@@ -122,7 +122,7 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
         method: "PATCH",
         body: JSON.stringify({ status: "ANSWERED" }),
       });
-      
+
       setReplyInputs(prev => ({ ...prev, [questionId]: '' }));
       fetchQuestions();
     } catch (err: any) {
@@ -170,14 +170,14 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
 
       {isApprovedStaff(getCurrentUser()) && room && (
         <div className="mt-5 pt-4 border-t border-white/20 flex items-center justify-between">
-           <span className="text-sm font-semibold">{room.isActive !== false ? 'Close Room' : 'Reopen Room'}</span>
-           <button 
-             onClick={handleToggleRoomStatus}
-             disabled={isTogglingRoom}
-             className={`w-11 h-6 rounded-full relative transition-colors ${room.isActive !== false ? 'bg-red-400' : 'bg-green-400'}`}
-           >
-             <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all ${room.isActive !== false ? 'right-0.5' : 'left-0.5'}`} />
-           </button>
+          <span className="text-sm font-semibold">{room.isActive !== false ? 'Close Room' : 'Reopen Room'}</span>
+          <button
+            onClick={handleToggleRoomStatus}
+            disabled={isTogglingRoom}
+            className={`w-11 h-6 rounded-full relative transition-colors ${room.isActive !== false ? 'bg-green-400' : 'bg-red-400'}`}
+          >
+            <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all ${room.isActive !== false ? 'right-0.5' : 'left-0.5'}`} />
+          </button>
         </div>
       )}
     </div>
@@ -283,9 +283,9 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
 
             <div className="space-y-4">
               {discussions.length === 0 ? (
-                 <div className="bg-white rounded-lg shadow-sm p-10 text-center text-gray-400">
-                    {t('rooms.empty')}
-                 </div>
+                <div className="bg-white rounded-lg shadow-sm p-10 text-center text-gray-400">
+                  {t('rooms.empty')}
+                </div>
               ) : discussions.map(d => (
                 <div key={d.id} className="bg-white rounded-lg shadow-sm px-6 py-4 hover:shadow-md transition-shadow">
                   <div className="flex flex-wrap gap-2 items-center justify-between mb-2">
@@ -297,13 +297,12 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
                         {d.timeAgo || (d.createdAt ? new Date(d.createdAt).toLocaleDateString() : '')}
                       </span>
                     </div>
-                    <span className={`text-[10px] font-medium px-2.5 py-0.5 rounded uppercase tracking-wider ${
-                      d.status === "ANSWERED"
-                        ? 'bg-green-100 text-green-700'
-                        : d.status === "APPROVED" 
+                    <span className={`text-[10px] font-medium px-2.5 py-0.5 rounded uppercase tracking-wider ${d.status === "ANSWERED"
+                      ? 'bg-green-100 text-green-700'
+                      : d.status === "APPROVED"
                         ? 'bg-blue-100 text-blue-700'
                         : 'bg-orange-100 text-orange-600'
-                    }`}>
+                      }`}>
                       {d.status === "ANSWERED" ? t('rooms.status.answered') : d.status === "APPROVED" ? t('rooms.status.approved') : t('rooms.status.pending')}
                     </span>
                   </div>
