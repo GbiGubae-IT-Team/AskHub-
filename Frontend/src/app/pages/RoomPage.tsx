@@ -7,7 +7,7 @@ import {
   ShieldCheck,
   Send,
 } from 'lucide-react';
-import { apiFetch, getAuthToken } from '../api';
+import { apiFetch, getAuthToken, isApprovedStaff, getCurrentUser } from '../api';
 import { useLanguage } from '../context/LanguageContext';
 
 interface RoomPageProps {
@@ -34,6 +34,7 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [replyInputs, setReplyInputs] = useState<Record<string, string>>({});
   const [isReplyingId, setIsReplyingId] = useState<string | null>(null);
+  const [isTogglingRoom, setIsTogglingRoom] = useState(false);
 
   const handleBack = () => {
     if (onBack) onBack();
@@ -131,6 +132,23 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
     }
   };
 
+  const handleToggleRoomStatus = async () => {
+    if (!room || isTogglingRoom) return;
+    setIsTogglingRoom(true);
+    const newStatus = room.isActive === false ? true : false;
+    try {
+      await apiFetch(`/rooms/${currentRoomId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ isActive: newStatus })
+      });
+      setRoom((prev: any) => ({ ...prev, isActive: newStatus }));
+    } catch (err: any) {
+      alert("Failed to update room status");
+    } finally {
+      setIsTogglingRoom(false);
+    }
+  };
+
   const renderRoomInfo = () => (
     <div className="bg-[#2D6DB5] rounded-lg p-5 text-white">
       <h3 className="font-bold text-base mb-2">{t('rooms.aboutTitle')}</h3>
@@ -149,6 +167,19 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
           </span>
         )}
       </div>
+
+      {isApprovedStaff(getCurrentUser()) && room && (
+        <div className="mt-5 pt-4 border-t border-white/20 flex items-center justify-between">
+           <span className="text-sm font-semibold">{room.isActive !== false ? 'Close Room' : 'Reopen Room'}</span>
+           <button 
+             onClick={handleToggleRoomStatus}
+             disabled={isTogglingRoom}
+             className={`w-11 h-6 rounded-full relative transition-colors ${room.isActive !== false ? 'bg-red-400' : 'bg-green-400'}`}
+           >
+             <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all ${room.isActive !== false ? 'right-0.5' : 'left-0.5'}`} />
+           </button>
+        </div>
+      )}
     </div>
   );
 
@@ -217,9 +248,16 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
             {room.category}
           </span>
         )}
-        <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-3">
-          {room?.name || t('rooms.defaultName')}
-        </h2>
+        <div className="flex items-center justify-center gap-3 mb-3">
+          <h2 className="text-2xl md:text-3xl font-bold leading-tight">
+            {room?.name || t('rooms.defaultName')}
+          </h2>
+          {room && room.isActive === false && (
+            <span className="text-xs font-bold bg-red-500/80 text-white px-2 py-1 rounded-md uppercase tracking-wider">
+              Closed
+            </span>
+          )}
+        </div>
         <p className="text-white/85 text-sm md:text-base max-w-xl mx-auto leading-relaxed mb-5">
           {room?.description || t('rooms.defaultDesc')}
         </p>
