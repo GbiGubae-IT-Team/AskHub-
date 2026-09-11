@@ -211,7 +211,7 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
     setReplyErrors((prev) => ({ ...prev, [id]: "" }));
     setIsAnsweringQuestionId(id);
     try {
-      await apiFetch("/answers", {
+      const res = await apiFetch("/answers", {
         method: "POST",
         body: JSON.stringify({ content: answerContent, questionId: id }),
       });
@@ -230,13 +230,14 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
             answer: '',
             answers: [
               ...currentAnswers,
-              { id: 'new', content: answerContent, createdAt: new Date().toISOString() },
+              res?.data ? res.data : { id: 'new', content: answerContent, createdAt: new Date().toISOString() },
             ],
           };
         })
       );
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      alert(err.message || "Failed to submit answer");
     } finally {
       setIsAnsweringQuestionId(null);
     }
@@ -265,9 +266,9 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
           };
         })
       );
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert("Failed to delete reply");
+      alert(err.message || "Failed to delete reply");
     } finally {
       setIsDeletingAnswerId(null);
       setDeletingAnswerInfo(null);
@@ -305,9 +306,9 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
         })
       );
       setEditingAnswerId(null);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert("Failed to update reply");
+      alert(err.message || "Failed to update reply");
     } finally {
       setIsSavingAnswerId(null);
     }
