@@ -122,9 +122,11 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
   };
 
   const [createRoomError, setCreateRoomError] = useState<string | null>(null);
+  const [isCreatingRoom, setIsCreatingRoom] = useState(false);
 
   const handleCreateRoom = async () => {
-    if (!roomName.trim()) return;
+    if (!roomName.trim() || isCreatingRoom) return;
+    setIsCreatingRoom(true);
     setCreateRoomError(null);
     try {
       const res = await apiFetch("/rooms", {
@@ -149,6 +151,8 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
     } catch (err: any) {
       console.error("Failed to create room:", err);
       setCreateRoomError(err.message || "Failed to create room. You may lack permission.");
+    } finally {
+      setIsCreatingRoom(false);
     }
   };
 
@@ -189,10 +193,13 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
     }
   };
 
+  const [isAnsweringQuestionId, setIsAnsweringQuestionId] = useState<string | null>(null);
+
   const handleSubmitAnswer = async (id: string) => {
     const q = questions.find((x) => x.id === id);
-    if (!q || !(q.answer || '').trim()) return;
+    if (!q || !(q.answer || '').trim() || isAnsweringQuestionId) return;
     const answerContent = q.answer.trim();
+    setIsAnsweringQuestionId(id);
     try {
       await apiFetch("/answers", {
         method: "POST",
@@ -220,6 +227,8 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
       );
     } catch (err) {
       console.error(err);
+    } finally {
+      setIsAnsweringQuestionId(null);
     }
   };
 
@@ -524,10 +533,10 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
                         <div className="flex justify-end mt-2">
                           <button
                             onClick={() => handleSubmitAnswer(question.id)}
-                            disabled={!(question.answer || '').trim()}
+                            disabled={!(question.answer || '').trim() || isAnsweringQuestionId === question.id}
                             className="bg-[#2D6DB5] hover:bg-[#235892] disabled:bg-gray-200 disabled:text-gray-400 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors uppercase tracking-wider cursor-pointer shadow-2xs"
                           >
-                            {t('staff.submitAnswer')}
+                            {isAnsweringQuestionId === question.id ? t('staff.submitAnswer') + '...' : t('staff.submitAnswer')}
                           </button>
                         </div>
                       </div>
@@ -856,10 +865,10 @@ export function StaffPage({ onBack, onGoToRoom }: StaffPageProps) {
               {/* Submit */}
               <button
                 onClick={handleCreateRoom}
-                disabled={!roomName.trim()}
+                disabled={!roomName.trim() || isCreatingRoom}
                 className="w-full bg-[#2D6DB5] hover:bg-[#245A94] disabled:bg-gray-300 text-white font-bold py-2.5 rounded-none transition-colors tracking-wide uppercase text-xs cursor-pointer"
               >
-                {t('staff.modal.createBtn')}
+                {isCreatingRoom ? t('staff.modal.createBtn') + '...' : t('staff.modal.createBtn')}
               </button>
             </div>
           </div>

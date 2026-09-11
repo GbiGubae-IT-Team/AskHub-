@@ -33,6 +33,7 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
   const [question, setQuestion] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [replyInputs, setReplyInputs] = useState<Record<string, string>>({});
+  const [isReplyingId, setIsReplyingId] = useState<string | null>(null);
 
   const handleBack = () => {
     if (onBack) onBack();
@@ -108,7 +109,8 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
 
   const handleReplySubmit = async (questionId: string) => {
     const content = replyInputs[questionId];
-    if (!content?.trim()) return;
+    if (!content?.trim() || isReplyingId) return;
+    setIsReplyingId(questionId);
     
     try {
       await apiFetch("/answers", {
@@ -124,6 +126,8 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
       fetchQuestions();
     } catch (err: any) {
       alert(err.message || t('rooms.err.reply'));
+    } finally {
+      setIsReplyingId(null);
     }
   };
 
@@ -296,10 +300,10 @@ export function RoomPage({ onBack, activeRoom }: RoomPageProps) {
                       </div>
                       <button
                         onClick={() => handleReplySubmit(d.id)}
-                        disabled={!replyInputs[d.id]?.trim()}
-                        className="bg-[#2D6DB5] hover:bg-[#235892] disabled:bg-gray-300 text-white px-3 py-2 rounded-md transition-colors cursor-pointer"
+                        disabled={!replyInputs[d.id]?.trim() || isReplyingId === d.id}
+                        className="bg-[#2D6DB5] hover:bg-[#235892] disabled:bg-gray-300 disabled:text-gray-500 text-white font-semibold p-2 rounded-lg transition-colors cursor-pointer"
                       >
-                        <Send size={16} />
+                        <Send size={18} />
                       </button>
                     </div>
                   )}
