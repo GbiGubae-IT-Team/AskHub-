@@ -5,6 +5,8 @@
 
 generator client {
   provider = "prisma-client"
+  moduleFormat = "esm"
+  importFileExtension = "js"
   output   = "../src/generated/prisma"
 }
 
@@ -72,6 +74,7 @@ model User {
   roomsCreated          Room[]         @relation("RoomCreator")
   roomsJoined           Room[]         @relation("RoomMembers")
   notificationReads     NotificationRead[]
+  pushDevices           PushDevice[]
 }
 
 model Question {
@@ -193,6 +196,10 @@ model Notification {
 
   createdAt   DateTime           @default(now())
   reads       NotificationRead[]
+  pushQueuedAt DateTime?
+  pushDeliveries PushDelivery[]
+
+  @@index([pushQueuedAt, createdAt])
 }
 
 model NotificationRead {
@@ -204,4 +211,38 @@ model NotificationRead {
   readAt         DateTime     @default(now())
 
   @@unique([userId, notificationId])
+}
+model PushDevice {
+  id              String   @id
+  secretHash      String
+  expoPushToken   String?  @unique
+  userId          String?
+  user            User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  language        String   @default("en")
+  isEnabled       Boolean  @default(false)
+  bindingVersion  Int      @default(0)
+  lastSeenAt      DateTime @default(now())
+  deliveries      PushDelivery[]
+
+  @@index([userId, isEnabled])
+}
+
+model PushDelivery {
+  id              String       @id @default(uuid())
+  notificationId  String
+  notification    Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  deviceId        String
+  device          PushDevice   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  deviceVersion   Int
+  status          String       @default("pending")
+  attempts        Int          @default(0)
+  availableAt     DateTime     @default(now())
+  ticketId        String?
+  sentToken       String?
+  lastError       String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@unique([notificationId, deviceId])
+  @@index([status, availableAt])
 }

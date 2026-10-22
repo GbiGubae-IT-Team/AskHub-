@@ -4,3 +4,5 @@ export * from "./getNotificationById.controller.js";
 export * from "./updateNotification.controller.js";
 export * from "./markAllRead.controller.js";
 export * from "./deleteNotification.controller.js";
+
+export * from "./markRead.controller.js";

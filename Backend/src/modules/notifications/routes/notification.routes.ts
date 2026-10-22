@@ -1,3 +1,4 @@
+import { registerDeviceController, disableDeviceController } from "../push/device.controller.js";
 import { Router } from "express";
 import { asyncHandler } from "../../../core/utils/asyncHandler.js";
 import {
@@ -11,10 +12,16 @@ import {
   getNotificationByIdController,
   listNotificationsController,
   markAllReadController,
+  markReadController,
   updateNotificationController,
 } from "../controllers/index.js";
 
 const router = Router();
+
+router.put("/devices/:id", optionalAuthenticate, asyncHandler(registerDeviceController));
+// The per-installation secret authorizes removal even after a session expires.
+router.delete("/devices/:id", asyncHandler(disableDeviceController));
+router.patch("/:id/read", authenticate, requirePermission("notification:read"), asyncHandler(markReadController));
 
 router.get(
   "/",
