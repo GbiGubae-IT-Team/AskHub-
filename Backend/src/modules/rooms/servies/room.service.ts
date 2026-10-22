@@ -206,6 +206,23 @@ export const joinRoomService = async (
   };
 };
 
+export const joinRoomByCodeService = async (
+  code: unknown,
+  actor?: JwtPayload,
+): Promise<{ roomId: string; name: string; code: string | null }> => {
+  if (typeof code !== "string" || !/^\d{6}$/.test(code.trim())) {
+    throw new BadRequestError("Invalid 6-digit room key");
+  }
+
+  const normalizedCode = code.trim();
+  const room = await roomRepository.findByCode(normalizedCode);
+  if (!room) {
+    throw new NotFoundError("Room not found with this key");
+  }
+
+  return joinRoomService(room.id, normalizedCode, actor);
+};
+
 export const leaveRoomService = async (
   roomId: string,
   actor: JwtPayload,

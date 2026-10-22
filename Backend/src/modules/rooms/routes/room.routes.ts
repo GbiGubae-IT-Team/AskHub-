@@ -12,6 +12,7 @@ import {
   listRoomsController,
   updateRoomController,
   joinRoomController,
+  joinRoomByCodeController,
   leaveRoomController,
 } from "../controllers/index.js";
 
@@ -37,6 +38,7 @@ router.delete(
   asyncHandler(deleteRoomController),
 );
 
+router.post("/join-by-code", optionalAuthenticate, asyncHandler(joinRoomByCodeController));
 router.post("/:id/join", optionalAuthenticate, asyncHandler(joinRoomController));
 router.delete("/:id/leave", authenticate, asyncHandler(leaveRoomController));
 

@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import type { AuthenticatedRequest } from "../../auth/types/auth.types.js";
-import { joinRoomService } from "../servies/room.service.js";
+import { joinRoomService, joinRoomByCodeService } from "../servies/room.service.js";
 
 export const joinRoomController = async (
   req: Request | AuthenticatedRequest,
@@ -13,3 +13,13 @@ export const joinRoomController = async (
   return res.status(200).json({ success: true, message: "Joined room successfully", data: result });
 };
 
+
+export const joinRoomByCodeController = async (
+  req: Request | AuthenticatedRequest,
+  res: Response,
+) => {
+  const { code } = req.body || {};
+  const actor = "user" in req ? req.user : undefined;
+  const result = await joinRoomByCodeService(code, actor);
+  return res.status(200).json({ success: true, message: "Joined room successfully", data: result });
+};
