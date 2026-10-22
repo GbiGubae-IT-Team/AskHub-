@@ -29,6 +29,10 @@ router.post(
   asyncHandler(createQuestionController),
 );
 
+// Durable mobile submissions; existing web POST routes remain supported.
+router.post("/queued", optionalAuthenticate,
+  asyncHandler(createQuestionController));
+
 router.patch("/:id", authenticate, asyncHandler(updateQuestionController));
 
 router.delete(

@@ -1,3 +1,4 @@
+import { queuedCreate } from "../../../core/utils/queuedCreate.js";
 import { QuestionStatus, NotificationTarget } from "../../../generated/prisma/client.js";
 import { hasPermission } from "../../../core/constants/permissions.js";
 import { isPrivilegedRole } from "../../../core/constants/roleHierarchy.js";
@@ -66,6 +67,7 @@ const assertQuestionAnswerable = (
 export const createAnswerService = async (
   body: unknown,
   actor: JwtPayload,
+  requestId?: string,
 ): Promise<AnswerResponse> => {
   if (!canCreate(actor.role)) {
     throw new ForbiddenError("You do not have permission to create answers");
@@ -79,12 +81,20 @@ export const createAnswerService = async (
     throw new NotFoundError("Question not found");
   }
 
-  assertQuestionAnswerable(question, actor);
-
-  const answer = await answerRepository.create({
-    content: dto.content,
-    questionId: dto.questionId,
-    authorId: actor.userId,
+  const {item: answer, created} = await queuedCreate({
+    id: requestId,
+    find: answerRepository.findById,
+    matches: existing => existing.authorId === actor.userId && existing.content === dto.content &&
+      existing.questionId === dto.questionId,
+    create: async () => {
+      assertQuestionAnswerable(question, actor);
+      return answerRepository.create({
+        ...(requestId !== undefined && { id: requestId }),
+        content: dto.content,
+        questionId: dto.questionId,
+        authorId: actor.userId,
+      });
+    },
   });
 
   if (question.status !== QuestionStatus.ANSWERED) {
@@ -94,7 +104,7 @@ export const createAnswerService = async (
     );
   }
 
-  if (question.authorId !== actor.userId) {
+  if (created && question.authorId !== actor.userId) {
     await sendNotificationToUser({
       userId: question.authorId,
       content: "Your question has been answered.",

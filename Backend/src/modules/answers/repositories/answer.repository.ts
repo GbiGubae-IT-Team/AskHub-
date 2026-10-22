@@ -46,12 +46,14 @@ export const answerRepository = {
   },
 
   async create(data: {
+    id?: string;
     content: string;
     questionId: string;
     authorId: string;
   }) {
     return prisma.answer.create({
       data: {
+        ...(data.id !== undefined && { id: data.id }),
         content: data.content,
         question: { connect: { id: data.questionId } },
         author: { connect: { id: data.authorId } },

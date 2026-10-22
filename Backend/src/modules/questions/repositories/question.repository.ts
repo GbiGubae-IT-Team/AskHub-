@@ -97,6 +97,7 @@ export const questionRepository = {
   },
 
   async create(data: {
+    id?: string;
     title?: string;
     content: string;
     isAnonymous: boolean;
@@ -106,6 +107,7 @@ export const questionRepository = {
   }) {
     const row = await prisma.question.create({
       data: {
+        ...(data.id !== undefined && { id: data.id }),
         ...(data.title !== undefined && { title: data.title }),
         content: data.content,
         isAnonymous: data.isAnonymous,

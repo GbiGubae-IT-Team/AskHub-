@@ -1,3 +1,4 @@
+import { queuedCreate } from "../../../core/utils/queuedCreate.js";
 import { QuestionStatus, NotificationTarget } from "../../../generated/prisma/client.js";
 import { hasPermission } from "../../../core/constants/permissions.js";
 import { isPrivilegedRole } from "../../../core/constants/roleHierarchy.js";
@@ -65,6 +66,7 @@ const canViewQuestion = (
 export const createQuestionService = async (
   body: unknown,
   actor?: JwtPayload,
+  requestId?: string,
 ): Promise<QuestionResponse> => {
   if (actor && !canCreate(actor.role)) {
     throw new ForbiddenError("You do not have permission to create questions");
@@ -73,17 +75,6 @@ export const createQuestionService = async (
   const dto = questionValidationService.validateCreate(body);
 
 
-
-  if (dto.roomId) {
-    const room = await questionRepository.findActiveRoom(dto.roomId);
-    if (!room) {
-      throw new BadRequestError("Room not found or is inactive");
-    }
-  }
-
-  if (dto.tagIds?.length) {
-    await assertValidTagIds(dto.tagIds);
-  }
 
   let authorId = actor?.userId;
   if (!authorId) {
@@ -94,16 +85,38 @@ export const createQuestionService = async (
     authorId = anon.id;
   }
 
-  const question = await questionRepository.create({
-    ...(dto.title !== undefined && { title: dto.title }),
-    content: dto.content,
-    isAnonymous: dto.isAnonymous ?? true,
-    authorId: authorId,
-    ...(dto.roomId !== undefined && { roomId: dto.roomId }),
-    ...(dto.tagIds !== undefined && { tagIds: dto.tagIds }),
+  const {item: question, created} = await queuedCreate({
+    id: requestId,
+    find: questionRepository.findById,
+    matches: existing => existing.authorId === authorId && existing.content === dto.content &&
+      existing.title === (dto.title ?? null) && existing.roomId === (dto.roomId ?? null) &&
+      existing.isAnonymous === (dto.isAnonymous ?? true) &&
+      JSON.stringify(existing.tags.map(tag => tag.id).sort()) === JSON.stringify([...(dto.tagIds || [])].sort()),
+    create: async () => {
+      if (dto.roomId) {
+        const room = await questionRepository.findActiveRoom(dto.roomId);
+        if (!room) {
+          throw new BadRequestError("Room not found or is inactive");
+        }
+      }
+
+      if (dto.tagIds?.length) {
+        await assertValidTagIds(dto.tagIds);
+      }
+
+      return questionRepository.create({
+        ...(requestId !== undefined && { id: requestId }),
+        ...(dto.title !== undefined && { title: dto.title }),
+        content: dto.content,
+        isAnonymous: dto.isAnonymous ?? true,
+        authorId: authorId,
+        ...(dto.roomId !== undefined && { roomId: dto.roomId }),
+        ...(dto.tagIds !== undefined && { tagIds: dto.tagIds }),
+      });
+    },
   });
 
-  await sendNotificationToUser({
+  if (created) await sendNotificationToUser({
     targetType: NotificationTarget.STAFF,
     content: `New question posted: ${dto.title || 'Untitled'}`,
     createdById: authorId,
