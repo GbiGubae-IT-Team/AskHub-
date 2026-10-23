@@ -1,4 +1,4 @@
-const API_URL = "https://gibi-askhub.onrender.com/api/v1";//"http://localhost:5000/api/v1";
+const API_URL = "https://askhub-1.onrender.com/api/v1";//"http://localhost:5000/api/v1";
 
 export const getAuthToken = () => localStorage.getItem("token") || "";
 export const setAuthToken = (token: string) => localStorage.setItem("token", token);
